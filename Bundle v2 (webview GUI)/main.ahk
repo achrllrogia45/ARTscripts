@@ -239,24 +239,23 @@ ShowScriptsManager(*) {
 }
 
 WebReloadScript(WebView) {
-  Reload()
-}
+    global ManagerGui, ReadmeWindows
+    
+    ; Destroy webviews gracefully first to free any locks
+    for k, wnd in ReadmeWindows {
+      try {
+        wnd.Destroy()
+      }
+    }
+    if IsSet(ManagerGui) && ManagerGui {
+      try {
+        ManagerGui.Destroy()
+      }
+    }
 
-WebGetModules(WebView) {
-  global ActiveModules
-  arrStr := "["
-  for i, moduleName in ActiveModules {
-    arrStr .= '"' moduleName '"' (i < ActiveModules.Length ? "," : "")
+    Sleep(100)
+    Reload()
   }
-  arrStr .= "]"
-  return arrStr
-}
-
-WebGetToggles(WebView) {
-  global ActiveModules, Toggles
-  jsonStr := "{"
-  for i, moduleName in ActiveModules {
-    jsonStr .= '"' moduleName '": ' Toggles[moduleName] (i < ActiveModules.Length ? "," : "")
   }
   jsonStr .= "}"
   return jsonStr
@@ -279,13 +278,10 @@ WebGetReadmes(WebView) {
   return jsonStr
 }
 
-global ReadmeWindows
+global ReadmeWindows := Map()
 
 WebShowReadme(WebView, mod) {
   global ReadmeWindows, WebViewCtrl
-
-  if !IsSet(ReadmeWindows)
-    ReadmeWindows := Map()
   
   if ReadmeWindows.Has(mod) {
     try {

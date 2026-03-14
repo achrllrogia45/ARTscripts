@@ -133,34 +133,51 @@
             justify-content: space-between;
         }
 
-        .form-check-label {
+        .my-label {
             font-size: 0.9rem;
             color: var(--text-main);
             order: 1;
             cursor: pointer;
         }
 
-        .form-check .form-check-input {
+        .my-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
             order: 2;
-            float: none;
-            margin: 0 !important;
+            margin: 0;
             background-color: #222;
             border: 1px solid #333;
             width: 1.2em;
             height: 1.2em;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s ease;
+            position: relative;
+            display: inline-block;
         }
 
-        .form-check .form-check-input:checked {
+        .my-checkbox:checked {
             background-color: var(--accent-color);
             border-color: var(--accent-color);
             filter: drop-shadow(0 0 5px rgba(0, 255, 136, 0.4));
         }
 
-        .form-check .form-check-input:focus {
+        .my-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 1px;
+            width: 5px;
+            height: 10px;
+            border: solid #000;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .my-checkbox:focus {
             box-shadow: none;
             border-color: var(--accent-color);
+            outline: none;
         }
 
         /* Minimalist Reload Button */
@@ -190,7 +207,7 @@
         }
 
         /* Subtle Module Hover Effect */
-        .form-check:hover .form-check-label {
+        .form-check:hover .my-label {
             color: var(--accent-color);
         }
     </style>
@@ -206,8 +223,10 @@
         color: #fff;
         font-size: 12px;
         font-weight: bold;
-        cursor: help;
+        cursor: pointer;
         user-select: none;
+        flex-shrink: 0;
+        z-index: 10;
     }
     .help-icon:hover {
         background-color: #777;
@@ -259,10 +278,10 @@
 
                 container.innerHTML += `
                     <div class="form-check">
-                        <label class="form-check-label" for="${mod}">${mod}</label>
-                        <div style="display:flex; align-items:center; gap:12px; order:2;">
+                        <label class="my-label" for="${mod}">${mod}</label>
+                        <div style="display:flex; align-items:center; justify-content:flex-end; width: 60px; gap:12px; order:2;">
                             ${helpIcon}
-                            <input class="form-check-input" type="checkbox" id="${mod}" style="order:unset" ${isChecked} onchange="updateToggle('${mod}', this.checked)">
+                            <input class="my-checkbox" type="checkbox" id="${mod}" ${isChecked} onchange="updateToggle('${mod}', this.checked)">
                         </div>
                     </div>
                 `;
