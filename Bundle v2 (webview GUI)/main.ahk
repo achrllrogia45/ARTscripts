@@ -301,12 +301,14 @@ WebShowReadme(WebView, mod) {
   ReadmeTooltipGui := Gui("+AlwaysOnTop -Caption +ToolWindow +Border", mod " - Readme")
   ReadmeTooltipGui.BackColor := "1e1e1e"
   ReadmeTooltipGui.SetFont("cWhite s10", "Consolas")
-  ReadmeTooltipGui.Add("Text", "Background1e1e1e w400", cleanText)
-
+  
+  ; Use Edit instead of Text to allow overflow scrolling
+  Edt := ReadmeTooltipGui.Add("Edit", "w400 h300 ReadOnly Background1e1e1e cWhite -E0x200 +VScroll", cleanText)
+  
   MouseGetPos(&mX, &mY)
-  dispX := mX + 15
-  dispY := mY + 15
-  ReadmeTooltipGui.Show("NoActivate x" dispX " y" dispY)
+  dispX := mX + 25
+  dispY := mY + 25
+  ReadmeTooltipGui.Show("NoActivate x" dispX " y" dispY " w400 h300")
 }
 
 WebHideReadme(WebView) {
