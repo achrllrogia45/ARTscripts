@@ -2,6 +2,7 @@
 ; EXTERNAL MODULE INCLUDES
 ; ==============================================================================
 #Include "Lib\WebViewToo.ahk"
+#Include "Lib\markdown.ahk"
 #Include "Modules/AltArrow.ahk"
 #Include "Modules/SpacePan.ahk"
 #Include "Modules/AlwaysOnTop.ahk"
@@ -305,26 +306,7 @@ WebShowReadme(WebView, mod) {
   
   cleanText := Trim(match[1], "`r`n ")
 
-  ; Simple Markdown to HTML Conversion
-  html := "<!DOCTYPE html><html><head><meta http-equiv='X-UA-Compatible' content='IE=edge'><style>"
-  html .= "body { background-color: #1e1e1e; color: #e0e0e0; font-family: 'Inter', 'Segoe UI', sans-serif; font-size: 13px; margin: 15px; overflow-y: auto; overflow-x: hidden; border: none; }"
-  html .= "h1 { font-size: 18px; color: #00ff88; margin-top: 0; }"
-  html .= "h2 { font-size: 14px; color: #00ff88; border-bottom: 1px solid #333; padding-bottom: 4px; margin-top: 16px; }"
-  html .= "h3 { font-size: 13px; color: #00ff88; }"
-  html .= "p { line-height: 1.4; margin-top: 4px; margin-bottom: 8px; }"
-  html .= "ul { padding-left: 20px; margin-top: 4px; }"
-  html .= "li { margin-bottom: 4px; }"
-  html .= "::-webkit-scrollbar { width: 6px; } body { scrollbar-face-color: #333; scrollbar-track-color: #1e1e1e; scrollbar-arrow-color: #00ff88; }"
-  html .= "</style></head><body>"
-
-  ; Convert Markdown Headings
-  cleanText := RegExReplace(cleanText, "m)^# (.*?)\s*$", "<h1>$1</h1>")
-  cleanText := RegExReplace(cleanText, "m)^## (.*?)\s*$", "<h2>$1</h2>")
-  cleanText := RegExReplace(cleanText, "m)^### (.*?)\s*$", "<h3>$1</h3>")
-  
-  ; Convert newlines to breaks if not already an HTML block
-  ; We skip this heavily to maintain existing <p> tags the user is using, but we'll do simple spacing
-  html .= cleanText . "</body></html>"
+  html := ParseMarkdownToHTML(cleanText)
 
   if ReadmeTooltipGui {
     ReadmeTooltipGui.Destroy()
