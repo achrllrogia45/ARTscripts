@@ -52,13 +52,31 @@ ParseMarkdownToHTML(markdownText) {
             color: #ff88a0; 
             font-size: 12px; 
         }
+        
+        /* Webkit Scrollbar (if modern control is used) */
         ::-webkit-scrollbar { 
-            width: 6px; 
+            width: 4px; 
         } 
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00ff88;
+        }
+
+        /* IE/ActiveX Fallback Scrollbar */
         body { 
-            scrollbar-face-color: #333; 
-            scrollbar-track-color: #1e1e1e; 
+            scrollbar-face-color: #333333; 
+            scrollbar-track-color: #161618; 
             scrollbar-arrow-color: #00ff88; 
+            scrollbar-shadow-color: #333333;
+            scrollbar-darkshadow-color: #161618;
+            scrollbar-highlight-color: #161618;
+            scrollbar-3dlight-color: #333333;
         }
     )"
     html .= "</style></head><body>"
