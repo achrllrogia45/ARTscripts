@@ -1,10 +1,12 @@
 ; ==============================================================================
-/* Modules are import from here, so you can keep your main.ahk clean and organized.
- Each module should have its own .ahk file in the Modules folder, and you can add
- or remove modules by editing the #Include statements below and keeping the INI file in sync.
+/*
+  Import modules from here. for cleaner code and easier maintenance.
+  The order of these includes determines the order of the modules in the GUI,
+  so arrange them as desired. Each module should have a corresponding section 
+  in the INI file for toggles and hotkeys, which will be automatically managed 
+  by the main script.
 */
- ; ==============================================================================
-
+; ==============================================================================
 #Include "modules.ahk"
 
 ; ==============================================================================
@@ -182,8 +184,7 @@ A_TrayMenu.Add("Show Scripts List", (*) => ShowScriptsManager())
 A_TrayMenu.Add()
 A_TrayMenu.Add("Open (ListLines)", (*) => ListLines())
 A_TrayMenu.Add("Reload Scripts", (*) => Reload())
-A_TrayMenu.Add("Edit Main Script", (*) => Run('notepad.exe "' A_ScriptFullPath '"'))
-A_TrayMenu.Add("Edit Modules List", (*) => Run('notepad.exe "' A_ScriptDir '\modules.ahk"'))
+A_TrayMenu.Add("Edit Scripts", (*) => Run('notepad.exe "' A_ScriptFullPath '"'))
 A_TrayMenu.Add("Locate Scripts", (*) => Run(A_ScriptDir))
 A_TrayMenu.Add("Exit", (*) => ExitApp())
 A_TrayMenu.Default := "Show Scripts List"
