@@ -27,6 +27,7 @@
             border-radius: 12px;
             box-sizing: border-box;
             overflow: hidden;
+            /* user-select: none; */
         }
 
         .ahk-titleBar {
@@ -97,6 +98,30 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #modules-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 6px;
+            margin-bottom: 12px;
+        }
+
+        /* Tiny Custom Scrollbar */
+        #modules-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        #modules-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        #modules-container::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        #modules-container::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
         }
 
         /* Minimalist Checkbox Styling */
@@ -169,6 +194,25 @@
             color: var(--accent-color);
         }
     </style>
+<style>
+    .help-icon {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background-color: #555;
+        color: #fff;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: help;
+        user-select: none;
+    }
+    .help-icon:hover {
+        background-color: #777;
+    }
+</style>
 </head>
 <body oncontextmenu="return false;">
 
@@ -180,30 +224,9 @@
         </div>
     </div>
 
-    <div class="content">
-        <div class="form-check">
-            <label class="form-check-label" for="altArrow">AltArrow</label>
-            <input class="form-check-input" type="checkbox" id="altArrow">
-        </div>
-
-        <div class="form-check">
-            <label class="form-check-label" for="alwaysOnTop">AlwaysOnTop</label>
-            <input class="form-check-input" type="checkbox" id="alwaysOnTop">
-        </div>
-
-        <div class="form-check">
-            <label class="form-check-label" for="spacePan">SpacePan</label>
-            <input class="form-check-input" type="checkbox" id="spacePan">
-        </div>
-
-        <div class="form-check">
-            <label class="form-check-label" for="fkeys">Fkeys + Numpad</label>
-            <input class="form-check-input" type="checkbox" id="fkeys">
-        </div>
-
-        <div class="form-check">
-            <label class="form-check-label" for="cursLock">CursLock</label>
-            <input class="form-check-input" type="checkbox" id="cursLock">
+<div class="content" id="main-content">
+        <div id="modules-container">
+            <!-- Dynamic checkboxes will be generated here -->
         </div>
 
         <button type="button" class="btn btn-reload" onclick="this.innerHTML='Syncing...'; if(window.ahk) ahk.ReloadScript(); setTimeout(() => this.innerHTML='RELOAD SCRIPT', 1000)">
@@ -212,20 +235,46 @@
     </div>
 
 <script>
-    // Initialize checkboxes from AHK
+    // Initialize checkboxes from AHK dynamically
     async function initCheckboxes() {
         if (!window.ahk) return;
-        
+
         try {
+            const modulesStr = await ahk.GetModules();
+            const modules = JSON.parse(modulesStr);
+            
             const resultStr = await ahk.GetToggles();
             const toggles = JSON.parse(resultStr);
-            document.getElementById('altArrow').checked = toggles.Mod_AltArrow;
-            document.getElementById('alwaysOnTop').checked = toggles.Mod_AOT;
-            document.getElementById('spacePan').checked = toggles.Mod_SpacePan;
-            document.getElementById('fkeys').checked = toggles.Mod_FkeyNumpad;
-            document.getElementById('cursLock').checked = toggles.Mod_CursLock;
+
+            const readmesStr = await ahk.GetReadmes();
+            const readmes = JSON.parse(readmesStr);
+
+            const container = document.getElementById('modules-container');
+            container.innerHTML = '';
+
+            modules.forEach(mod => {
+                const isChecked = toggles[mod] == 1 || toggles[mod] == true ? 'checked' : '';
+                const hasReadme = readmes[mod] == 1;
+                const helpIcon = hasReadme ? `<span class="help-icon" onclick="showReadme('${mod}')" title="Read Markdown Guide">?</span>` : '';
+
+                container.innerHTML += `
+                    <div class="form-check">
+                        <label class="form-check-label" for="${mod}">${mod}</label>
+                        <div style="display: flex; align-items: center; gap: 8px; order: 2;">
+                            ${helpIcon}
+                            <input class="form-check-input" type="checkbox" id="${mod}" ${isChecked} onchange="updateToggle('${mod}', this.checked)">
+                        </div>
+                    </div>
+                `;
+            });
         } catch (e) {
             console.error("Failed to load toggles", e);
+        }
+    }
+
+    function showReadme(mod) {
+        if (window.ahk) {
+            ahk.ShowReadme(mod);
         }
     }
 
@@ -236,12 +285,6 @@
         }
     }
 
-    // Attach event listeners
-    ['altArrow', 'alwaysOnTop', 'spacePan', 'fkeys', 'cursLock'].forEach(id => {
-        const el = document.getElementById(id);
-        el.addEventListener('change', (e) => updateToggle(id, e.target.checked));
-    });
-
     // Run on load
     window.addEventListener('DOMContentLoaded', () => {
         initCheckboxes();
@@ -250,3 +293,6 @@
 
 </body>
 </html>
+
+
+

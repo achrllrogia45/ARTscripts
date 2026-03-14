@@ -1,6 +1,7 @@
 ; ==============================================================================
 ; SPACEPAN MODULE - AHK v2
 ; ==============================================================================
+
 Init_SpacePan() {
     GroupAdd("AdobeMMButton", "ahk_exe Photoshop.exe")
     GroupAdd("AdobeMMButton", "ahk_exe InDesign.exe")
@@ -9,7 +10,7 @@ Init_SpacePan() {
     GroupAdd("AdobeMMButton", "ahk_exe Muse.exe")
 }
 
-#HotIf Mod_SpacePan && WinActive("ahk_group AdobeMMButton")
+#HotIf IsSet(Toggles) && Toggles.Has("SpacePan") && Toggles["SpacePan"] && WinActive("ahk_group AdobeMMButton")
 MButton:: {
     Send("{Space Down}")
     Send("{LButton Down}")

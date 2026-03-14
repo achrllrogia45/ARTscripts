@@ -1,4 +1,18 @@
 ; ==============================================================================
+; EXTERNAL MODULE INCLUDES
+; ==============================================================================
+#Include "Lib\WebViewToo.ahk"
+#Include "Modules\AltArrow.ahk"
+#Include "Modules\SpacePan.ahk"
+#Include "Modules\AlwaysOnTop.ahk"
+#Include "Modules\FkeysNumpad.ahk"
+#Include "Modules\CursLock.ahk"
+#Include "Modules\a.ahk"
+#Include "Modules\b.ahk"
+#Include "Modules\c.ahk"
+#Include "Modules\d.ahk"
+
+; ==============================================================================
 ; MAIN.AHK (CORE CONTROLLER) - AHK v2
 ; ==============================================================================
 #Requires AutoHotkey v2.0
@@ -19,19 +33,26 @@ if not A_IsAdmin {
 }
 
 ; --- Global Variables ---
-global Monitor1_W, Monitor1_H, Monitor2_Pos, GuiScale, GuiX_Offset, GuiY_Offset
-global FkeyX, FkeyY
 global TimerInterval := 5000
 global MaxMouseJump := 300
-global LastMouseX, LastMouseY
+global LastMouseX := 0
+global LastMouseY := 0
 global PenActive := false
 global prevX := 0
 global prevY := 0
 global LastCapsState := -1
-global Prev_CursLock
-global Mode
 
 global IniFile := A_ScriptDir "\mode.ini"
+
+global ActiveModules := []
+if !A_IsCompiled {
+    Loop Read, A_ScriptFullPath {
+        if RegExMatch(A_LoopReadLine, "i)^\s*#Include\s+[`"']Modules[\\/](.*?)\.ahk[`"']", &match) {
+            ActiveModules.Push(match[1])
+        }
+    }
+}
+global Toggles := Map()
 
 ; ==============================================================================
 ; INI GENERATOR
@@ -49,21 +70,21 @@ if !FileExist(IniFile) {
     ; On Off Hotkeys for GUI (0 = disabled, 1 = enabled)
     [GUI Hotkeys]
     AlwaysOnTop=null
-    FkeyNumpad=null
-    Altarrow=null
+    FkeysNumpad=null
+    AltArrow=null
     SpacePan=null
-    Curslock=null
+    CursLock=null
 
     [AlwaysOnTop_config]
     AlwaysOnTop_mode=F8 ; F8 to toggle AlwaysOnTop mode
 
     ; Toggle GUI (0 = disabled, 1 = enabled)
     [Toggles]
-    Mod_AltArrow=0
-    Mod_AOT=0
-    Mod_SpacePan=0
-    Mod_FkeyNumpad=0
-    Mod_CursLock=0
+    AltArrow=0
+    AlwaysOnTop=0
+    SpacePan=0
+    FkeysNumpad=0
+    CursLock=0
 
     [Settings]
     FkeyNumpad_mode=(F)KEY
@@ -72,7 +93,7 @@ if !FileExist(IniFile) {
     [Curslock_config]
     Monitor1_W=1920
     Monitor1_H=1080
-    Monitor2_Pos=""DOWN""
+    Monitor2_Pos="DOWN"
     GuiScale=1
     GuiX_Offset=0
     GuiY_Offset=0
@@ -86,73 +107,88 @@ if !FileExist(IniFile) {
 }
 
 ; ==============================================================================
-; INITIALIZATION & SETTINGS
+; KEEP INI CLEAN & SORTED
 ; ==============================================================================
 
-; Load GUI Toggle Hotkeys
-global HK_GUI_AOT := IniRead(IniFile, "GUI Hotkeys", "AlwaysOnTop", "null")
-global HK_GUI_FkeyNumpad := IniRead(IniFile, "GUI Hotkeys", "FkeyNumpad", "null")
-global HK_GUI_AltArrow := IniRead(IniFile, "GUI Hotkeys", "Altarrow", "null")
-global HK_GUI_SpacePan := IniRead(IniFile, "GUI Hotkeys", "SpacePan", "null")
-global HK_GUI_Curslock := IniRead(IniFile, "GUI Hotkeys", "Curslock", "null")
+ActiveModuleMap := Map()
+for _, moduleName in ActiveModules
+    ActiveModuleMap[moduleName] := true
 
-; Load Action Hotkeys
-global HK_AOT_Action := IniRead(IniFile, "AlwaysOnTop_config", "AlwaysOnTop_mode", "F8")
+; 1. Delete orphaned keys
+for _, section in ["Toggles", "GUI Hotkeys"] {
+    try {
+        keyList := IniRead(IniFile, section)
+    } catch {
+        continue
+    }
+    Loop Parse keyList, "`n", "`r" {
+        if (A_LoopField == "")
+            continue
+        keyName := StrSplit(A_LoopField, "=")[1]
+        if !ActiveModuleMap.Has(keyName)
+            IniDelete(IniFile, section, keyName)
+    }
+}
 
-; Load Toggles
-global Mod_AltArrow := IniRead(IniFile, "Toggles", "Mod_AltArrow", 0)
-global Mod_AOT := IniRead(IniFile, "Toggles", "Mod_AOT", 0)
-global Mod_SpacePan := IniRead(IniFile, "Toggles", "Mod_SpacePan", 0)
-global Mod_FkeyNumpad := IniRead(IniFile, "Toggles", "Mod_FkeyNumpad", 0)
-global Mod_CursLock := IniRead(IniFile, "Toggles", "Mod_CursLock", 0)
-Prev_CursLock := Mod_CursLock
+; 2. Enforce exact sorting based on `#Include` order
+sortedToggles := ""
+sortedHotkeys := ""
 
-; Load Settings
-Mode := IniRead(IniFile, "Settings", "FkeyNumpad_mode", "(F)KEY")
+for _, moduleName in ActiveModules {
+    ; Read existing or use defaults
+    currentToggle := IniRead(IniFile, "Toggles", moduleName, "0")
+    currentHotkey := IniRead(IniFile, "GUI Hotkeys", moduleName, "null")
+    
+    ; Delete the existing ones so we can rewrite them in perfect order
+    IniDelete(IniFile, "Toggles", moduleName)
+    IniDelete(IniFile, "GUI Hotkeys", moduleName)
 
-; Load FkeyNumpad Configuration
-FkeyX := IniRead(IniFile, "FkeyNumpad_config", "X", "null")
-FkeyY := IniRead(IniFile, "FkeyNumpad_config", "Y", "10")
+    ; Build sorted blocks
+    sortedToggles .= moduleName "=" currentToggle "`n"
+    sortedHotkeys .= moduleName "=" currentHotkey "`n"
+}
 
-; Load CursLock Configuration
-Monitor1_W := Integer(IniRead(IniFile, "Curslock_config", "Monitor1_W", "1920"))
-Monitor1_H := Integer(IniRead(IniFile, "Curslock_config", "Monitor1_H", "1080"))
-Monitor2_Pos := IniRead(IniFile, "Curslock_config", "Monitor2_Pos", '"DOWN"')
-GuiScale := Float(IniRead(IniFile, "Curslock_config", "GuiScale", "1"))
-GuiX_Offset := Integer(IniRead(IniFile, "Curslock_config", "GuiX_Offset", "0"))
-GuiY_Offset := Integer(IniRead(IniFile, "Curslock_config", "GuiY_Offset", "0"))
+IniWrite(RTrim(sortedToggles, "`n"), IniFile, "Toggles")
+IniWrite(RTrim(sortedHotkeys, "`n"), IniFile, "GUI Hotkeys")
 
-Monitor2_Pos := Trim(StrReplace(Monitor2_Pos, '"', ""), " `t") 
-LastMouseX := Monitor1_W // 2
-LastMouseY := Monitor1_H // 2
 
 ; ==============================================================================
-; DYNAMIC HOTKEY REGISTRATION
+; INITIALIZATION & DYNAMIC HOTKEYS
 ; ==============================================================================
-if (HK_GUI_AOT != "null" && HK_GUI_AOT != "")
-    Hotkey(HK_GUI_AOT, Toggle_AOT)
-if (HK_GUI_FkeyNumpad != "null" && HK_GUI_FkeyNumpad != "")
-    Hotkey(HK_GUI_FkeyNumpad, Toggle_FkeyNumpad)
-if (HK_GUI_AltArrow != "null" && HK_GUI_AltArrow != "")
-    Hotkey(HK_GUI_AltArrow, Toggle_AltArrow)
-if (HK_GUI_SpacePan != "null" && HK_GUI_SpacePan != "")
-    Hotkey(HK_GUI_SpacePan, Toggle_SpacePan)
-if (HK_GUI_Curslock != "null" && HK_GUI_Curslock != "")
-    Hotkey(HK_GUI_Curslock, Toggle_Curslock)
 
-if (HK_AOT_Action != "null" && HK_AOT_Action != "")
-    Hotkey(HK_AOT_Action, Action_AOT)
+for i, moduleName in ActiveModules {
+    ; Load toggles dynamically
+    Toggles[moduleName] := Integer(IniRead(IniFile, "Toggles", moduleName, "0"))
+    
+    ; Load and register GUI Toggle Hotkeys
+    hk := IniRead(IniFile, "GUI Hotkeys", moduleName, "null")
+    if (hk != "null" && hk != "") {
+        Hotkey(hk, ToggleModule.Bind(moduleName))
+    }
+}
+
+ToggleModule(moduleName, HotkeyName := "") {
+    Toggles[moduleName] := !Toggles[moduleName]
+    IniWrite(Toggles[moduleName], IniFile, "Toggles", moduleName)
+    UpdateWebViewToggleUI()
+    
+    ; Call module-specific listener if it exists
+    fn := "OnToggle_" moduleName
+    if IsSet(%fn%) && Type(%fn%) == "Func"
+        %fn%(Toggles[moduleName])
+}
 
 ; ==============================================================================
 ; TRAY MENU SETUP
 ; ==============================================================================
 A_TrayMenu.Delete()
-A_TrayMenu.Add("Show Button", (*) => ShowPositionSelector())
+if IsSet(ShowPositionSelector)
+    A_TrayMenu.Add("Show Button", (*) => ShowPositionSelector())
 A_TrayMenu.Add("Show Scripts List", (*) => ShowScriptsManager())
 A_TrayMenu.Add()
 A_TrayMenu.Add("Open (ListLines)", (*) => ListLines())
 A_TrayMenu.Add("Reload Scripts", (*) => Reload())
-A_TrayMenu.Add("Edit Scripts", (*) => Run("notepad.exe `"" A_ScriptFullPath "`""))
+A_TrayMenu.Add("Edit Scripts", (*) => Run('notepad.exe "' A_ScriptFullPath '"'))
 A_TrayMenu.Add("Locate Scripts", (*) => Run(A_ScriptDir))
 A_TrayMenu.Add("Exit", (*) => ExitApp())
 A_TrayMenu.Default := "Show Scripts List"
@@ -160,9 +196,14 @@ A_TrayMenu.Default := "Show Scripts List"
 ; ==============================================================================
 ; BOOT UP MODULES
 ; ==============================================================================
-Init_SpacePan()
-Init_FkeysNumpad()
-Init_CursLock()
+
+; Call initialization functions if they exist
+for i, moduleName in ActiveModules {
+    fn := "Init_" moduleName
+    if IsSet(%fn%) && Type(%fn%) == "Func"
+        %fn%()
+}
+
 ShowScriptsManager()
 
 ; ==============================================================================
@@ -183,10 +224,13 @@ ShowScriptsManager(*) {
         WebViewSettings := {}
     }
 
-    ManagerGui := WebViewGui("+AlwaysOnTop -Caption -Resize", "Scripts Manager",, WebViewSettings)
+    ManagerGui := WebViewGui.Call("+AlwaysOnTop -Caption -Resize", "Scripts Manager",, WebViewSettings)
     ManagerGui.OnEvent("Close", (*) => ManagerGui.Hide())
     
+    ManagerGui.AddCallbackToScript("GetModules", WebGetModules)
     ManagerGui.AddCallbackToScript("GetToggles", WebGetToggles)
+    ManagerGui.AddCallbackToScript("GetReadmes", WebGetReadmes)
+    ManagerGui.AddCallbackToScript("ShowReadme", WebShowReadme)
     ManagerGui.AddCallbackToScript("UpdateToggle", WebUpdateToggle)
     ManagerGui.AddCallbackToScript("ReloadScript", WebReloadScript)
 
@@ -198,32 +242,69 @@ WebReloadScript(WebView) {
     Reload()
 }
 
+WebGetModules(WebView) {
+    global ActiveModules
+    arrStr := "["
+    for i, moduleName in ActiveModules {
+        arrStr .= '"' moduleName '"' (i < ActiveModules.Length ? "," : "")
+    }
+    arrStr .= "]"
+    return arrStr
+}
+
 WebGetToggles(WebView) {
-    global Mod_AltArrow, Mod_AOT, Mod_SpacePan, Mod_FkeyNumpad, Mod_CursLock
-    return '{"Mod_AltArrow": ' Mod_AltArrow ', "Mod_AOT": ' Mod_AOT ', "Mod_SpacePan": ' Mod_SpacePan ', "Mod_FkeyNumpad": ' Mod_FkeyNumpad ', "Mod_CursLock": ' Mod_CursLock '}'
+    global ActiveModules, Toggles
+    jsonStr := "{"
+    for i, moduleName in ActiveModules {
+        jsonStr .= '"' moduleName '": ' Toggles[moduleName] (i < ActiveModules.Length ? "," : "")
+    }
+    jsonStr .= "}"
+    return jsonStr
+}
+
+WebGetReadmes(WebView) {
+    global ActiveModules
+    jsonStr := "{"
+    for i, moduleName in ActiveModules {
+        filePath := A_ScriptDir "\Modules\" moduleName ".md"
+        hasReadme := FileExist(filePath) ? 1 : 0
+        jsonStr .= '"' moduleName '": ' hasReadme (i < ActiveModules.Length ? "," : "")
+    }
+    jsonStr .= "}"
+    return jsonStr
+}
+
+WebShowReadme(WebView, mod) {
+    filePath := A_ScriptDir "\Modules\" mod ".md"
+    if !FileExist(filePath)
+        return
+        
+    content := FileRead(filePath)
+    
+    ReadmeGui := Gui("+AlwaysOnTop +Resize -MaximizeBox", mod " - Readme")
+    ReadmeGui.BackColor := "1e1e1e"
+    ReadmeGui.SetFont("cWhite s10", "Consolas")
+    Edt := ReadmeGui.Add("Edit", "x0 y0 w400 h300 ReadOnly Background1e1e1e", content)
+    
+    ReadmeGui.OnEvent("Size", (GuiObj, MinMax, Width, Height) => (
+        MinMax != -1 ? Edt.Move(0, 0, Width, Height) : ""
+    ))
+    
+    ReadmeGui.Show("w400 h300")
 }
 
 WebUpdateToggle(WebView, name, value) {
-    global Mod_AltArrow, Mod_AOT, Mod_SpacePan, Mod_FkeyNumpad, Mod_CursLock, Prev_CursLock
+    global Toggles
+    Toggles[name] := Integer(value)
+    IniWrite(Toggles[name], IniFile, "Toggles", name)
     
-    if (name == "altArrow")
-        Mod_AltArrow := value, IniWrite(Mod_AltArrow, IniFile, "Toggles", "Mod_AltArrow")
-    else if (name == "alwaysOnTop")
-        Mod_AOT := value, IniWrite(Mod_AOT, IniFile, "Toggles", "Mod_AOT")
-    else if (name == "spacePan")
-        Mod_SpacePan := value, IniWrite(Mod_SpacePan, IniFile, "Toggles", "Mod_SpacePan")
-    else if (name == "fkeys")
-        Mod_FkeyNumpad := value, IniWrite(Mod_FkeyNumpad, IniFile, "Toggles", "Mod_FkeyNumpad")
-    else if (name == "cursLock") {
-        Mod_CursLock := value, IniWrite(Mod_CursLock, IniFile, "Toggles", "Mod_CursLock")
-        if (Mod_CursLock && Mod_CursLock != Prev_CursLock)
-            ShowPositionSelector()
-        Prev_CursLock := Mod_CursLock
-    }
+    fn := "OnToggle_" name
+    if IsSet(%fn%) && Type(%fn%) == "Func"
+        %fn%(Toggles[name])
 }
 
 UpdateWebViewToggleUI() {
-    global ManagerGui, Mod_AltArrow, Mod_AOT, Mod_SpacePan, Mod_FkeyNumpad, Mod_CursLock
+    global ManagerGui
     if IsSet(ManagerGui) && ManagerGui {
         ManagerGui.ExecuteScriptAsync("
         (
@@ -234,42 +315,4 @@ UpdateWebViewToggleUI() {
     }
 }
 
-Toggle_AOT(HotkeyName := "") {
-    global Mod_AOT := !Mod_AOT
-    IniWrite(Mod_AOT, IniFile, "Toggles", "Mod_AOT")
-    UpdateWebViewToggleUI()
-}
-Toggle_FkeyNumpad(HotkeyName := "") {
-    global Mod_FkeyNumpad := !Mod_FkeyNumpad
-    IniWrite(Mod_FkeyNumpad, IniFile, "Toggles", "Mod_FkeyNumpad")
-    UpdateWebViewToggleUI()
-}
-Toggle_AltArrow(HotkeyName := "") {
-    global Mod_AltArrow := !Mod_AltArrow
-    IniWrite(Mod_AltArrow, IniFile, "Toggles", "Mod_AltArrow")
-    UpdateWebViewToggleUI()
-}
-Toggle_SpacePan(HotkeyName := "") {
-    global Mod_SpacePan := !Mod_SpacePan
-    IniWrite(Mod_SpacePan, IniFile, "Toggles", "Mod_SpacePan")
-    UpdateWebViewToggleUI()
-}
-Toggle_Curslock(HotkeyName := "") {
-    global Mod_CursLock := !Mod_CursLock
-    global Prev_CursLock
-    IniWrite(Mod_CursLock, IniFile, "Toggles", "Mod_CursLock")
-    UpdateWebViewToggleUI()
-    if (Mod_CursLock)
-        ShowPositionSelector()
-    Prev_CursLock := Mod_CursLock
-}
 
-; ==============================================================================
-; EXTERNAL MODULE INCLUDES
-; ==============================================================================
-#Include "Lib\WebViewToo.ahk"
-#Include "AltArrow.ahk"
-#Include "AlwaysOnTop.ahk"
-#Include "SpacePan.ahk"
-#Include "FkeysNumpad.ahk"
-#Include "CursLock.ahk"

@@ -1,7 +1,11 @@
 ; ==============================================================================
 ; ALTARROW MODULE - AHK v2
 ; ==============================================================================
-#HotIf Mod_AltArrow
+
+; Declare for linter (Main script provides the actual object)
+global Toggles
+
+#HotIf IsSet(Toggles) && Toggles.Has("AltArrow") && Toggles["AltArrow"]
 !i::Send("{UP}")
 !k::Send("{DOWN}")
 !j::Send("{LEFT}")

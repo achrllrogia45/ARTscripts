@@ -1,14 +1,34 @@
 ; ==============================================================================
 ; CURSLOCK MODULE - AHK v2
 ; ==============================================================================
+
+; Declare for linter
+global Toggles, IniFile
+
+global Monitor1_W := 1920
+global Monitor1_H := 1080
+global Monitor2_Pos := "DOWN"
+global GuiScale := 1
+global GuiX_Offset := 0
+global GuiY_Offset := 0
+
 Init_CursLock() {
+    global Monitor1_W, Monitor1_H, Monitor2_Pos, GuiScale, GuiX_Offset, GuiY_Offset
+    
+    Monitor1_W := Integer(IniRead(IniFile, "Curslock_config", "Monitor1_W", "1920"))
+    Monitor1_H := Integer(IniRead(IniFile, "Curslock_config", "Monitor1_H", "1080"))
+    Monitor2_Pos := Trim(StrReplace(IniRead(IniFile, "Curslock_config", "Monitor2_Pos", '"DOWN"'), '"', ""), " `t")
+    GuiScale := Float(IniRead(IniFile, "Curslock_config", "GuiScale", "1"))
+    GuiX_Offset := Integer(IniRead(IniFile, "Curslock_config", "GuiX_Offset", "0"))
+    GuiY_Offset := Integer(IniRead(IniFile, "Curslock_config", "GuiY_Offset", "0"))
+    
     SetTimer(MonitorInput, 15)
 }
 
 MonitorInput() {
     global prevX, prevY, PenActive, LastMouseX, LastMouseY
     
-    if (!Mod_CursLock)
+    if !(Toggles.Has("CursLock") && Toggles["CursLock"])
         return
 
     MouseGetPos(&cx, &cy)
@@ -141,3 +161,8 @@ ShowPremiumStatus(text) {
     ; Use Timer to auto-destroy
     SetTimer(() => (IsSet(StatusGui) && StatusGui ? StatusGui.Destroy() : ""), -1000)
 }
+OnToggle_CursLock(state) {
+    if (state)
+        ShowPositionSelector()
+}
+

@@ -1,8 +1,22 @@
 ; ==============================================================================
 ; ALWAYSONTOP MODULE - AHK v2
 ; ==============================================================================
+
+; Declare for linter
+global Toggles, IniFile
+
+global HK_AOT_Action := ""
+
+Init_AlwaysOnTop() {
+    global HK_AOT_Action
+    HK_AOT_Action := IniRead(IniFile, "AlwaysOnTop_config", "AlwaysOnTop_mode", "F8")
+    if (HK_AOT_Action != "null" && HK_AOT_Action != "") {
+        Hotkey(HK_AOT_Action, Action_AOT)
+    }
+}
+
 Action_AOT(HotkeyName := "") {
-    if (!Mod_AOT)
+    if !(IsSet(Toggles) && Toggles.Has("AlwaysOnTop") && Toggles["AlwaysOnTop"])
         return
         
     WinSetAlwaysOnTop(-1, "A")
