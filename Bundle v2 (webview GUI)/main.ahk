@@ -281,6 +281,18 @@ WebGetReadmes(WebView) {
 
 global ReadmeTooltipGui := false
 
+#HotIf ReadmeTooltipGui
+~LButton:: {
+  global ReadmeTooltipGui
+  if ReadmeTooltipGui {
+    MouseGetPos(,, &hoverWin)
+    if (hoverWin != ReadmeTooltipGui.Hwnd) {
+      WebHideReadme()
+    }
+  }
+}
+#HotIf
+
 WebShowReadme(WebView, mod) {
   global ReadmeTooltipGui
   filePath := A_ScriptDir "\Modules\" mod ".ahk"
@@ -338,7 +350,7 @@ WebShowReadme(WebView, mod) {
   ReadmeTooltipGui.Show("NoActivate x" dispX " y" dispY " w400 h300")
 }
 
-WebHideReadme(WebView) {
+WebHideReadme(WebView := unset) {
   global ReadmeTooltipGui
   if ReadmeTooltipGui {
     ReadmeTooltipGui.Destroy()

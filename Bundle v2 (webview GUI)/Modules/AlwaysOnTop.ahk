@@ -5,13 +5,13 @@
 /* [readme]
 # ALWAYSONTOP MODULE - README
 ## FUNCTIONALITY
-    - Toggles Always On Top for the active window.
-    - Displays a temporary on-screen message confirming the action.
+   <p> - Toggles Always On Top for the active window. </p>
+   <p> - Displays a temporary on-screen message confirming the action. </p>
 ## REQUIREMENTS
-    - Must have a global 'Toggles' object defined in Main.ahk.
-    - Only works when 'AlwaysOnTop' key is set to 1.
+   <p> - Must have a global 'Toggles' object defined in Main.ahk. </p>
+   <p> - Only works when 'AlwaysOnTop' key is set to 1. </p>
 ## CONFIGURATION
-    - Set the hotkey for toggling Always On Top in the INI file under [AlwaysOnTop_config] with the key 'AlwaysOnTop_mode'. Default is F8.
+    <p> - Set the hotkey for toggling Always On Top in the INI file under [AlwaysOnTop_config] with the key 'AlwaysOnTop_mode'. Default is F8. </p>
 */
 
 ; Declare for linter
