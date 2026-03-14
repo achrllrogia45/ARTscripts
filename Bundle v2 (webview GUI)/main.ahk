@@ -1,17 +1,11 @@
 ; ==============================================================================
-; EXTERNAL MODULE INCLUDES
-; ==============================================================================
-#Include "Lib\WebViewToo.ahk"
-#Include "Lib\markdown.ahk"
-#Include "Modules/AltArrow.ahk"
-#Include "Modules/SpacePan.ahk"
-#Include "Modules/AlwaysOnTop.ahk"
-#Include "Modules/FkeysNumpad.ahk"
-#Include "Modules/CursLock.ahk"
-#Include "Modules/a.ahk"
-#Include "Modules/b.ahk"
-#Include "Modules/c.ahk"
-#Include "Modules/d.ahk"
+/* Modules are import from here, so you can keep your main.ahk clean and organized.
+ Each module should have its own .ahk file in the Modules folder, and you can add
+ or remove modules by editing the #Include statements below and keeping the INI file in sync.
+*/
+ ; ==============================================================================
+
+#Include "modules.ahk"
 
 ; ==============================================================================
 ; MAIN.AHK (CORE CONTROLLER) - AHK v2
@@ -47,7 +41,7 @@ global IniFile := A_ScriptDir "\mode.ini"
 
 global ActiveModules := []
 if !A_IsCompiled {
-  loop read, A_ScriptFullPath {
+  loop read, A_ScriptDir "\modules.ahk" {
     if RegExMatch(A_LoopReadLine, "i)^\s*#Include\s+[`"']Modules[\\/](.*?)\.ahk[`"']", &match) {
       ActiveModules.Push(match[1])
     }
@@ -188,7 +182,8 @@ A_TrayMenu.Add("Show Scripts List", (*) => ShowScriptsManager())
 A_TrayMenu.Add()
 A_TrayMenu.Add("Open (ListLines)", (*) => ListLines())
 A_TrayMenu.Add("Reload Scripts", (*) => Reload())
-A_TrayMenu.Add("Edit Scripts", (*) => Run('notepad.exe "' A_ScriptFullPath '"'))
+A_TrayMenu.Add("Edit Main Script", (*) => Run('notepad.exe "' A_ScriptFullPath '"'))
+A_TrayMenu.Add("Edit Modules List", (*) => Run('notepad.exe "' A_ScriptDir '\modules.ahk"'))
 A_TrayMenu.Add("Locate Scripts", (*) => Run(A_ScriptDir))
 A_TrayMenu.Add("Exit", (*) => ExitApp())
 A_TrayMenu.Default := "Show Scripts List"
