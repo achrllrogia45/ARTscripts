@@ -254,8 +254,8 @@
 
             modules.forEach(mod => {
                 const isChecked = toggles[mod] == 1 || toggles[mod] == true ? 'checked' : '';
-                const hasReadme = readmes[mod] === true;
-                const helpIcon = hasReadme ? `<span class="help-icon" onclick="showReadme('${mod}')">?</span>` : ``;
+                const hasReadme = readmes[mod] == 1 || readmes[mod] === true;
+                const helpIcon = hasReadme ? `<span class="help-icon" onmouseenter="showReadme('${mod}')" onmouseleave="hideReadme()">?</span>` : ``;
 
                 container.innerHTML += `
                     <div class="form-check">
@@ -275,6 +275,12 @@
     function showReadme(mod) {
         if (window.ahk) {
             ahk.ShowReadme(mod);
+        }
+    }
+
+    function hideReadme() {
+        if (window.ahk) {
+            ahk.HideReadme();
         }
     }
 

@@ -230,6 +230,7 @@ ShowScriptsManager(*) {
   ManagerGui.AddCallbackToScript("GetToggles", WebGetToggles)
   ManagerGui.AddCallbackToScript("GetReadmes", WebGetReadmes)
   ManagerGui.AddCallbackToScript("ShowReadme", WebShowReadme)
+  ManagerGui.AddCallbackToScript("HideReadme", WebHideReadme)
   ManagerGui.AddCallbackToScript("UpdateToggle", WebUpdateToggle)
   ManagerGui.AddCallbackToScript("ReloadScript", WebReloadScript)
 
@@ -265,31 +266,55 @@ WebGetReadmes(WebView) {
   global ActiveModules
   jsonStr := "{"
   for i, moduleName in ActiveModules {
-    filePath := A_ScriptDir "\Modules\" moduleName ".md"
-    hasReadme := FileExist(filePath) ? 1 : 0
+    filePath := A_ScriptDir "\Modules\" moduleName ".ahk"
+    hasReadme := 0
+    if FileExist(filePath) {
+      content := FileRead(filePath)
+      if RegExMatch(content, "(?si)/\*\s*\[readme\](.*?)\*/")
+        hasReadme := 1
+    }
     jsonStr .= '"' moduleName '": ' hasReadme (i < ActiveModules.Length ? "," : "")
   }
   jsonStr .= "}"
   return jsonStr
 }
 
+global ReadmeTooltipGui := false
+
 WebShowReadme(WebView, mod) {
-  filePath := A_ScriptDir "\Modules\" mod ".md"
+  global ReadmeTooltipGui
+  filePath := A_ScriptDir "\Modules\" mod ".ahk"
   if !FileExist(filePath)
     return
 
   content := FileRead(filePath)
+  if !RegExMatch(content, "(?si)/\*\s*\[readme\](.*?)\*/", &match)
+    return
+  
+  cleanText := Trim(match[1], "`r`n ")
 
-  ReadmeGui := Gui("+AlwaysOnTop +Resize -MaximizeBox", mod " - Readme")
-  ReadmeGui.BackColor := "1e1e1e"
-  ReadmeGui.SetFont("cWhite s10", "Consolas")
-  Edt := ReadmeGui.Add("Edit", "x0 y0 w400 h300 ReadOnly Background1e1e1e", content)
+  if ReadmeTooltipGui {
+    ReadmeTooltipGui.Destroy()
+    ReadmeTooltipGui := false
+  }
 
-  ReadmeGui.OnEvent("Size", (GuiObj, MinMax, Width, Height) => (
-    MinMax != -1 ? Edt.Move(0, 0, Width, Height) : ""
-  ))
+  ReadmeTooltipGui := Gui("+AlwaysOnTop -Caption +ToolWindow +Border", mod " - Readme")
+  ReadmeTooltipGui.BackColor := "1e1e1e"
+  ReadmeTooltipGui.SetFont("cWhite s10", "Consolas")
+  ReadmeTooltipGui.Add("Text", "Background1e1e1e w400", cleanText)
 
-  ReadmeGui.Show("w400 h300")
+  MouseGetPos(&mX, &mY)
+  dispX := mX + 15
+  dispY := mY + 15
+  ReadmeTooltipGui.Show("NoActivate x" dispX " y" dispY)
+}
+
+WebHideReadme(WebView) {
+  global ReadmeTooltipGui
+  if ReadmeTooltipGui {
+    ReadmeTooltipGui.Destroy()
+    ReadmeTooltipGui := false
+  }
 }
 
 WebUpdateToggle(WebView, name, value) {
