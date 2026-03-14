@@ -255,7 +255,7 @@
             modules.forEach(mod => {
                 const isChecked = toggles[mod] == 1 || toggles[mod] == true ? 'checked' : '';
                 const hasReadme = readmes[mod] == 1 || readmes[mod] === true;
-                const helpIcon = hasReadme ? `<span class="help-icon" onmouseenter="showReadme('${mod}')" onmouseleave="hideReadme()">?</span>` : ``;
+                const helpIcon = hasReadme ? `<span class="help-icon" onclick="showReadme('${mod}')">?</span>` : ``;
 
                 container.innerHTML += `
                     <div class="form-check">

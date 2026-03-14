@@ -279,10 +279,18 @@ WebGetReadmes(WebView) {
   return jsonStr
 }
 
-global ReadmeTooltipGui := false
+global ReadmeWindows := Map()
 
 WebShowReadme(WebView, mod) {
-  global ReadmeTooltipGui
+  global ReadmeWindows, WebViewCtrl
+  
+  if ReadmeWindows.Has(mod) {
+    try {
+      ReadmeWindows[mod].Show()
+      return
+    }
+  }
+
   filePath := A_ScriptDir "\Modules\" mod ".ahk"
   if !FileExist(filePath)
     return
@@ -293,30 +301,26 @@ WebShowReadme(WebView, mod) {
   
   cleanText := Trim(match[1], "`r`n ")
 
-  if ReadmeTooltipGui {
-    ReadmeTooltipGui.Destroy()
-    ReadmeTooltipGui := false
+  if (A_IsCompiled) {
+    WebViewSettings := { DllPath: WebViewCtrl.TempDir "\" (A_PtrSize * 8) "bit\WebView2Loader.dll" }
+  } else {
+    WebViewSettings := {}
   }
 
-  ReadmeTooltipGui := Gui("+AlwaysOnTop -Caption +ToolWindow +Border", mod " - Readme")
-  ReadmeTooltipGui.BackColor := "1e1e1e"
-  ReadmeTooltipGui.SetFont("cWhite s10", "Consolas")
+  wnd := WebViewGui.Call("+AlwaysOnTop -Caption -Resize", mod " - Readme", , WebViewSettings)
+  wnd.OnEvent("Close", (*) => wnd.Hide())
   
-  ; Use Edit instead of Text to allow overflow scrolling
-  Edt := ReadmeTooltipGui.Add("Edit", "w400 h300 ReadOnly Background1e1e1e cWhite -E0x200 +VScroll", cleanText)
+  wnd.AddCallbackToScript("GetReadmeContent", (*) => cleanText)
+  wnd.AddCallbackToScript("GetModuleName", (*) => mod)
   
-  MouseGetPos(&mX, &mY)
-  dispX := mX + 25
-  dispY := mY + 25
-  ReadmeTooltipGui.Show("NoActivate x" dispX " y" dispY " w400 h300")
+  wnd.Navigate("Pages/readme.html")
+  wnd.Show("w400 h500")
+
+  ReadmeWindows[mod] := wnd
 }
 
 WebHideReadme(WebView) {
-  global ReadmeTooltipGui
-  if ReadmeTooltipGui {
-    ReadmeTooltipGui.Destroy()
-    ReadmeTooltipGui := false
-  }
+  ; Deprecated since we use click now, but kept for compatibility just in case
 }
 
 WebUpdateToggle(WebView, name, value) {
