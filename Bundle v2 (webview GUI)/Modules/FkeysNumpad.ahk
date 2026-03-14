@@ -11,7 +11,9 @@
    <p> - Must have a global 'Toggles' object defined in Main.ahk. </p>
    <p> - Only works when 'FkeysNumpad' key is set to 1. </p>
 ## CONFIGURATION
-   <p> - Set the hotkey for toggling between modes in the INI file under [Settings] with the key 'FkeyNumpad_mode'. Default is Ctrl + Alt + T. </p>
+   <p> - Set the hotkey for toggling between modes in the INI file under [Settings]
+        with the key 'FkeyNumpad_mode'. Default is Ctrl + Alt + T.
+   </p>
    <p> - Set the X and Y position for the on-screen mode indicator in the INI file </p>
    <p>     under [FkeyNumpad_config] with the keys 'X' and 'Y'. Default is X: null (centered), Y: 10. </p>
    <p> - The on-screen indicator will only show when Caps Lock is on, serving as a visual reminder of the current mode. </p>

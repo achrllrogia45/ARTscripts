@@ -3,22 +3,20 @@
 ; ==============================================================================
 
 /* [readme]
-    # SPACEPAN MODULE - README
-
-    ##FUNCTIONALITY:
-    - Remaps MButton to Space + LButton.
-    - Specifically designed for Adobe Suite panning.
-
-    ## REQUIREMENTS:
-    - Must have a global 'Toggles' object defined in Main.ahk.
-    - Only works when 'SpacePan' key is set to 1.
-
-    COMPATIBLE APPS:
-    1. Photoshop
-    2. InDesign
-    3. Acrobat / Reader
-    4. Muse
+# SPACEPAN MODULE - README
+## FUNCTIONALITY:
+<p> - Remaps MButton to Space + LButton. </p>
+<p> - Specifically designed for Adobe Suite panning. </p>
+## REQUIREMENTS:
+<p> - Must have a global 'Toggles' object defined in Main.ahk. </p>
+<p> - Only works when 'SpacePan' key is set to 1. </p>
+## COMPATIBLE APPS:
+<p> 1. Photoshop </p>
+<p> 2. InDesign </p>
+<p> 3. Acrobat / Reader </p>
+<p> 4. Muse </p>
 */
+
 Init_SpacePan() {
     GroupAdd("AdobeMMButton", "ahk_exe Photoshop.exe")
     GroupAdd("AdobeMMButton", "ahk_exe InDesign.exe")
