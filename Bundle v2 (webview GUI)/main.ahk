@@ -239,21 +239,6 @@ ShowScriptsManager(*) {
 }
 
 WebReloadScript(WebView) {
-  global ManagerGui, ReadmeWindows
-  
-  ; Destroy webviews gracefully first to free any locks
-  for k, wnd in ReadmeWindows {
-    try {
-      wnd.Destroy()
-    }
-  }
-  if IsSet(ManagerGui) && ManagerGui {
-    try {
-      ManagerGui.Destroy()
-    }
-  }
-
-  Sleep(100)
   Reload()
 }
 
@@ -294,18 +279,10 @@ WebGetReadmes(WebView) {
   return jsonStr
 }
 
-global ReadmeWindows := Map()
+global ReadmeTooltipGui := false
 
 WebShowReadme(WebView, mod) {
-  global ReadmeWindows, WebViewCtrl
-
-  if ReadmeWindows.Has(mod) {
-    try {
-      ReadmeWindows[mod].Show()
-      return
-    }
-  }
-
+  global ReadmeTooltipGui
   filePath := A_ScriptDir "\Modules\" mod ".ahk"
   if !FileExist(filePath)
     return
@@ -316,26 +293,57 @@ WebShowReadme(WebView, mod) {
   
   cleanText := Trim(match[1], "`r`n ")
 
-  if (A_IsCompiled) {
-    WebViewSettings := { DllPath: WebViewCtrl.TempDir "\" (A_PtrSize * 8) "bit\WebView2Loader.dll" }
-  } else {
-    WebViewSettings := {}
+  ; Simple Markdown to HTML Conversion
+  html := "<!DOCTYPE html><html><head><meta http-equiv='X-UA-Compatible' content='IE=edge'><style>"
+  html .= "body { background-color: #1e1e1e; color: #e0e0e0; font-family: 'Inter', 'Segoe UI', sans-serif; font-size: 13px; margin: 15px; overflow-y: auto; overflow-x: hidden; border: none; }"
+  html .= "h1 { font-size: 18px; color: #00ff88; margin-top: 0; }"
+  html .= "h2 { font-size: 14px; color: #00ff88; border-bottom: 1px solid #333; padding-bottom: 4px; margin-top: 16px; }"
+  html .= "h3 { font-size: 13px; color: #00ff88; }"
+  html .= "p { line-height: 1.4; margin-top: 4px; margin-bottom: 8px; }"
+  html .= "ul { padding-left: 20px; margin-top: 4px; }"
+  html .= "li { margin-bottom: 4px; }"
+  html .= "::-webkit-scrollbar { width: 6px; } body { scrollbar-face-color: #333; scrollbar-track-color: #1e1e1e; scrollbar-arrow-color: #00ff88; }"
+  html .= "</style></head><body>"
+
+  ; Convert Markdown Headings
+  cleanText := RegExReplace(cleanText, "m)^# (.*?)\s*$", "<h1>$1</h1>")
+  cleanText := RegExReplace(cleanText, "m)^## (.*?)\s*$", "<h2>$1</h2>")
+  cleanText := RegExReplace(cleanText, "m)^### (.*?)\s*$", "<h3>$1</h3>")
+  
+  ; Convert newlines to breaks if not already an HTML block
+  ; We skip this heavily to maintain existing <p> tags the user is using, but we'll do simple spacing
+  html .= cleanText . "</body></html>"
+
+  if ReadmeTooltipGui {
+    ReadmeTooltipGui.Destroy()
+    ReadmeTooltipGui := false
   }
 
-  wnd := WebViewGui.Call("+AlwaysOnTop -Caption -Resize", mod " - Readme", , WebViewSettings)
-  wnd.OnEvent("Close", (*) => wnd.Hide())
+  ReadmeTooltipGui := Gui("+AlwaysOnTop -Caption +ToolWindow +Border", mod " - Readme")
+  ReadmeTooltipGui.BackColor := "1e1e1e"
+  ReadmeTooltipGui.MarginX := 0
+  ReadmeTooltipGui.MarginY := 0
   
-  wnd.AddCallbackToScript("GetReadmeContent", (*) => cleanText)
-  wnd.AddCallbackToScript("GetModuleName", (*) => mod)
+  ; Use ActiveX to render HTML/Markdown
+  wb := ReadmeTooltipGui.Add("ActiveX", "w400 h300", "Shell.Explorer").Value
+  wb.Navigate("about:blank")
+  while wb.readyState != 4
+    Sleep 10
+  wb.document.write(html)
+  wb.document.close()
   
-  wnd.Navigate("Pages/readme.html")
-  wnd.Show("w400 h500")
-
-  ReadmeWindows[mod] := wnd
+  MouseGetPos(&mX, &mY)
+  dispX := mX + 25
+  dispY := mY + 25
+  ReadmeTooltipGui.Show("NoActivate x" dispX " y" dispY " w400 h300")
 }
 
 WebHideReadme(WebView) {
-  ; Deprecated since we use click now, but kept for compatibility just in case
+  global ReadmeTooltipGui
+  if ReadmeTooltipGui {
+    ReadmeTooltipGui.Destroy()
+    ReadmeTooltipGui := false
+  }
 }
 
 WebUpdateToggle(WebView, name, value) {
