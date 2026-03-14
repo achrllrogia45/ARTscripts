@@ -58,46 +58,38 @@ if !FileExist(IniFile) {
   DefaultINI := "
     (
     ; Hotkeys is From AutoHotkey v2 (Check Help inside AutoHotkey for more info)
-    ; # = WIN
-    ; ! = ALT
-    ; ^ = CTRL
-    ; + = SHIFT
-    ; null = No hotkey assigned
+; # = WIN
+; ! = ALT
+; ^ = CTRL
+; + = SHIFT
+; null = No hotkey assigned
 
-    ; On Off Hotkeys for GUI (0 = disabled, 1 = enabled)
-    [GUI Hotkeys]
-    AlwaysOnTop=null
-    FkeysNumpad=null
-    AltArrow=null
-    SpacePan=null
-    CursLock=null
+; On Off Hotkeys for GUI (0 = disabled, 1 = enabled)
+[GUI Hotkeys]
 
-    [AlwaysOnTop_config]
-    AlwaysOnTop_mode=F8
 
-    ; Toggle GUI (0 = disabled, 1 = enabled)
-    [Toggles]
-    AltArrow=0
-    AlwaysOnTop=0
-    SpacePan=0
-    FkeysNumpad=0
-    CursLock=0
+[AlwaysOnTop_config]
+AlwaysOnTop_mode=F8
 
-    [Settings]
-    FkeyNumpad_mode=(F)KEY
+; Toggle GUI (0 = disabled, 1 = enabled)
+[Toggles]
 
-    ; GUI Settings for Curslock setting based your first monitor resolution
-    [Curslock_config]
-    Monitor1_W=1920
-    Monitor1_H=1080
-    Monitor2_Pos="DOWN"
-    GuiScale=1
-    GuiX_Offset=0
-    GuiY_Offset=0
 
-    [FkeyNumpad_config]
-    X=null
-    Y=50
+[Settings]
+FkeyNumpad_mode=(F)KEY
+
+; GUI Settings for Curslock setting based your first monitor resolution
+[Curslock_config]
+Monitor1_W=1920
+Monitor1_H=1080
+Monitor2_Pos="DOWN"
+GuiScale=1
+GuiX_Offset=0
+GuiY_Offset=0
+
+[FkeyNumpad_config]
+X=null
+Y=50
     )"
 
   FileAppend(DefaultINI, IniFile)
