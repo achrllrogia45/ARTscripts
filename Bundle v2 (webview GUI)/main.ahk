@@ -279,10 +279,13 @@ WebGetReadmes(WebView) {
   return jsonStr
 }
 
-global ReadmeWindows := Map()
+global ReadmeWindows
 
 WebShowReadme(WebView, mod) {
   global ReadmeWindows, WebViewCtrl
+
+  if !IsSet(ReadmeWindows)
+    ReadmeWindows := Map()
   
   if ReadmeWindows.Has(mod) {
     try {
