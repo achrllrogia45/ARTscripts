@@ -10,7 +10,7 @@
 ## CONFIGURATION
     <p> - Set the hotkey for toggling Always On Top in the INI file under [AlwaysOnTop_config] with the key 'AlwaysOnTop_key'. Default is F8. </p>
 */
-
+#Requires AutoHotkey v2.0
 ; Declare for linter
 global Toggles, IniFile
 

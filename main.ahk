@@ -2,8 +2,8 @@
 /*
   Import modules from here. for cleaner code and easier maintenance.
   The order of these includes determines the order of the modules in the GUI,
-  so arrange them as desired. Each module should have a corresponding section 
-  in the INI file for toggles and hotkeys, which will be automatically managed 
+  so arrange them as desired. Each module should have a corresponding section
+  in the INI file for toggles and hotkeys, which will be automatically managed
   by the main script.
 */
 ; ==============================================================================
@@ -13,24 +13,46 @@
 ; MAIN.AHK (CORE CONTROLLER) - AHK v2
 ; ==============================================================================
 #Requires AutoHotkey v2.0
+
 #SingleInstance Force
+
+; --- Global Variables ---
+global IniFile := A_ScriptDir "\mode.ini"
+
+global SettingsGui := false
+global Toggles := Map()
+global ActiveModules := []
+global ManagerGui
+global ReadmeTooltipGui := false
+  
+
 CoordMode("Mouse", "Screen")
 SetWorkingDir(A_ScriptDir)
 
-; --- SHIELDS: Prevent CapsLock flickering and ghost media keys ---
+; Check if the script was run without arguments OR with the wrong argument
+if (A_Args.Length = 0 || A_Args[1] != "from_launcher") {
+  MsgBox("Run launcher.exe!", "Notice")
+  ExitApp()
+}
+
+; Prevent CapsLock flickering and ghost media keys 
 SetStoreCapsLockMode(false)
 A_MenuMaskKey := "vkE8"
 
-; --- Auto-elevate to Admin ---
+; Auto-elevate to Admin 
 if not A_IsAdmin {
   try {
-    Run('*RunAs "' A_ScriptFullPath '"')
+    Run('*RunAs "' A_ScriptFullPath '"' "from_launcher")
   }
   ExitApp()
 }
 
-; --- 1. THE TEMPLATE (Define this once) ---
-commentSection(TargetFile, Section, CommentText) {
+; ==============================================================================
+; GLOBAL FUNCTIONS
+; =============================================================================
+
+; Comment component v1
+/* commentSection(TargetFile, Section, CommentText) {
   if !FileExist(TargetFile)
     return
 
@@ -45,16 +67,48 @@ commentSection(TargetFile, Section, CommentText) {
     FileObj.Write(NewContent)
     FileObj.Close()
   }
+  } 
+  */
+
+; Comment component v2. (Keep the comment always under Section)
+commentSection(TargetFile, Section, CommentText) {
+  if !FileExist(TargetFile)
+    return
+
+  FileContent := FileRead(TargetFile)
+  Target := "[" Section "]"
+
+  ; If the section doesn't exist at all,  can't add a comment to it
+  if !InStr(FileContent, Target)
+    return
+
+  ; Check if the comment is already perfectly placed directly under the [Section]
+  ; (check for both `r`n and `n` to ensure it works on all Windows line endings)
+  if InStr(FileContent, Target "`r`n" CommentText) || InStr(FileContent, Target "`n" CommentText)
+    return
+
+  ; If the code reaches here, it means the comment is missing OR it drifted to the bottom.
+  ; First, wipe the comment out from wherever it is to prevent duplicates:
+  FileContent := StrReplace(FileContent, "`r`n" CommentText, "")
+  FileContent := StrReplace(FileContent, "`n" CommentText, "")
+  FileContent := StrReplace(FileContent, CommentText, "")
+
+  ; Finally, forcefully inject it exactly one line below our target [Section]
+  NewContent := StrReplace(FileContent, Target, Target "`n" CommentText)
+
+  ; Save the file (Using UTF-8 so special characters don't break)
+  FileObj := FileOpen(TargetFile, "w", "UTF-8")
+  FileObj.Write(NewContent)
+  FileObj.Close()
 }
 
+; Reload component
+reloadScript() {
+  Run("launcher.ahk")
+  ExitApp()
+}
+; =============================================================================
 
-; --- Global Variables ---
-global IniFile := A_ScriptDir "\mode.ini"
-
-global Toggles := Map()
-global ActiveModules := []
-global ManagerGui
-  
 if !A_IsCompiled {
   loop read, A_ScriptDir "\modules.ahk" {
     if RegExMatch(A_LoopReadLine, "i)^\s*#Include\s+[`"']Modules[\\/](.*?)\.ahk[`"']", &match) {
@@ -67,74 +121,6 @@ if !A_IsCompiled {
 ; KEEP INI CLEAN & SORTED
 ; ==============================================================================
 
-ActiveModuleMap := Map()
-for _, moduleName in ActiveModules
-  ActiveModuleMap[moduleName] := true
-
-for _, section in ["Toggles", "GUI Hotkeys"] {
-  try {
-    keyList := IniRead(IniFile, section)
-  } catch {
-    continue
-  }
-  loop parse keyList, "`n", "`r" {
-    if (A_LoopField == "")
-      continue
-    keyName := StrSplit(A_LoopField, "=")[1]
-    if !ActiveModuleMap.Has(keyName)
-      IniDelete(IniFile, section, keyName)
-  }
-}
-
-sortedToggles := ""
-sortedHotkeys := ""
-
-for _, moduleName in ActiveModules {
-  currentHotkey := IniRead(IniFile, "GUI Hotkeys", moduleName, "null")
-
-  IniDelete(IniFile, "GUI Hotkeys", moduleName)
-
-  sortedHotkeys .= moduleName "=" currentHotkey "`n"
-}
-
-IniWrite(RTrim(sortedHotkeys, "`n"), IniFile, "GUI Hotkeys")
-
-FileContent := FileExist(IniFile) ? FileRead(IniFile) : ""
-if !InStr(FileContent, "; Hotkeys is From AutoHotkey v2") {
-  DefaultINI := "; Hotkeys is From AutoHotkey v2 (Check Help inside AutoHotkey for more info)`n"
-    . "; # = WIN`n"
-    . "; ! = ALT`n"
-    . "; ^ = CTRL`n"
-    . "; + = SHIFT`n"
-  ; Manually overwrite the file to prepend the header
-  FileObj := FileOpen(IniFile, "w", "UTF-8")
-  FileObj.Write(DefaultINI . FileContent)
-  FileObj.Close()
-}
-
-; ==============================================================================
-; KEEP INI CLEAN & SORTED
-; ==============================================================================
-
-ActiveModuleMap := Map()
-for _, moduleName in ActiveModules
-  ActiveModuleMap[moduleName] := true
-
-for _, section in ["Toggles", "GUI Hotkeys"] {
-  try {
-    keyList := IniRead(IniFile, section)
-  } catch {
-    continue
-  }
-  loop parse keyList, "`n", "`r" {
-    if (A_LoopField == "")
-      continue
-    keyName := StrSplit(A_LoopField, "=")[1]
-    if !ActiveModuleMap.Has(keyName)
-      IniDelete(IniFile, section, keyName)
-  }
-}
-
 sortedToggles := ""
 sortedHotkeys := ""
 
@@ -143,17 +129,30 @@ for _, moduleName in ActiveModules {
   currentToggle := IniRead(IniFile, "Toggles", moduleName, "0")
   currentHotkey := IniRead(IniFile, "GUI Hotkeys", moduleName, "null")
 
-  ; Delete the existing ones so we can rewrite them in perfect order
-  IniDelete(IniFile, "Toggles", moduleName)
-  IniDelete(IniFile, "GUI Hotkeys", moduleName)
-
   ; Build sorted blocks
   sortedToggles .= moduleName "=" currentToggle "`n"
   sortedHotkeys .= moduleName "=" currentHotkey "`n"
 }
 
+; deletes orphans, AND prevents the section from jumping to the bottom
 IniWrite(RTrim(sortedToggles, "`n"), IniFile, "Toggles")
 IniWrite(RTrim(sortedHotkeys, "`n"), IniFile, "GUI Hotkeys")
+
+commentSection(IniFile, "GUI Hotkeys", "; Setting Hotkey for On/Off GUI Check ")
+
+FileContent := FileExist(IniFile) ? FileRead(IniFile) : ""
+if !InStr(FileContent, "; Hotkeys is From AutoHotkey v2") {
+  DefaultINI := "; Hotkeys is From AutoHotkey v2 (Check Help inside AutoHotkey for more info)`n"
+    . "; # = WIN`n"
+    . "; ! = ALT`n"
+    . "; ^ = CTRL`n"
+    . "; + = SHIFT`n"
+
+  ; Manually overwrite the file to prepend the header
+  FileObj := FileOpen(IniFile, "w", "UTF-8")
+  FileObj.Write(DefaultINI . FileContent)
+  FileObj.Close()
+}
 
 ; ==============================================================================
 ; INITIALIZATION & DYNAMIC HOTKEYS
@@ -163,6 +162,9 @@ for i, moduleName in ActiveModules {
   Toggles[moduleName] := Integer(IniRead(IniFile, "Toggles", moduleName, "0"))
 
   hk := IniRead(IniFile, "GUI Hotkeys", moduleName, "null")
+  commentSection(IniFile, "GUI Hotkeys", "; Setting Hotkey for On/Off GUI Check ")
+  
+
   if (hk != "null" && hk != "") {
     Hotkey(hk, ToggleModule.Bind(moduleName))
   }
@@ -188,7 +190,7 @@ if IsSet(ShowPositionSelector)
 A_TrayMenu.Add("Show Scripts List", (*) => ShowScriptsManager())
 A_TrayMenu.Add()
 A_TrayMenu.Add("Open (ListLines)", (*) => ListLines())
-A_TrayMenu.Add("Reload Scripts", (*) => Reload())
+A_TrayMenu.Add("Reload Scripts", (*) => reloadScript())
 A_TrayMenu.Add("Edit Scripts", (*) => Run('notepad.exe "' A_ScriptFullPath '"'))
 A_TrayMenu.Add("Locate Scripts", (*) => Run(A_ScriptDir))
 A_TrayMenu.Add("Exit", (*) => ExitApp())
@@ -211,12 +213,16 @@ ShowScriptsManager()
 ; MANAGER GUI & TOGGLE LOGIC
 ; ==============================================================================
 ShowScriptsManager(*) {
-  
+  global ManagerGui ; CRITICAL: Forces AHK to remember the window
 
-  if IsSet(ManagerGui) && ManagerGui {
-    ManagerGui.Show()
-    return
+  if IsSet(ManagerGui) {
+    try {
+      ManagerGui.Show() 
+      return ;
+    }
   }
+
+  ; --- CREATION CODE (Only runs the very first time) ---
 
   if (A_IsCompiled) {
     WebViewCtrl.CreateFileFromResource((A_PtrSize * 8) "bit\WebView2Loader.dll", WebViewCtrl.TempDir)
@@ -226,6 +232,8 @@ ShowScriptsManager(*) {
   }
 
   ManagerGui := WebViewGui.Call("+AlwaysOnTop -Caption +Resize", "Scripts Manager", , WebViewSettings)
+
+  ; This keeps the object alive in the background when the user closes it
   ManagerGui.OnEvent("Close", (*) => ManagerGui.Hide())
 
   ManagerGui.AddCallbackToScript("GetModules", WebGetModules)
@@ -239,10 +247,8 @@ ShowScriptsManager(*) {
 
   ManagerGui.Navigate("Pages/index.html")
   ManagerGui.Show("w260 h380")
-  
 }
 
-global SettingsGui := false
 
 WebShowSettings(WebView := "", *) {
   SetTimer(LaunchSettingsGui, -1)
@@ -254,50 +260,69 @@ LaunchSettingsGui() {
   ; =========================================
   ; GUI SETTINGS POSITIONING VARIABLES
   ; =========================================
-  OffsetX := 5     ; Gap between right edge of main window and left edge of settings
-  OffsetY := 0      ; Vertical shift (0 means their top edges perfectly align)
-  GuiWidth := 360   ; Width of the settings window
-  GuiHeight := 600  ; Height of the settings window
+  OffsetX := "20em" ; em / px hybrid offset system.
+  OffsetY := "6.9em"
+  GuiWidth := 360
+  GuiHeight := 600
+
+  ; --- Dynamic Scaling Math ---
+  ; 1920 / 120 = 16px (Standard).
+  ; On a 4K screen: 3840 / 120 = 32px.
+  DynamicBase := A_ScreenWidth / 120
+
+  ParseUnit(val) {
+    if IsNumber(val)
+      return val
+
+    unit := RegExReplace(val, "i)[0-9.-]", "")
+    num := Float(RegExReplace(val, "i)[^0-9.-]", ""))
+
+    if (unit = "em")
+      return num * DynamicBase
+    return num
+  }
   ; =========================================
 
-  ; Default fallback in case the main window is hidden
+  FinalOffsetX := ParseUnit(OffsetX)
+  FinalOffsetY := ParseUnit(OffsetY)
+
+  ; Default fallback
   ShowOptions := "xCenter yCenter w" GuiWidth " h" GuiHeight
 
-  ; Ask Windows directly for the coordinates using the exact Window Title!
   try {
     if WinExist("Scripts Manager") {
       WinGetPos(&mX, &mY, &mW, &mH, "Scripts Manager")
 
-      ; Calculate the exact drop spot
-      newX := mX + mW + OffsetX
-      newY := mY + OffsetY
+      mCenterX := mX + (mW // 2)
+      mCenterY := mY + (mH // 2)
+
+      newX := mCenterX - (GuiWidth // 2) + FinalOffsetX
+      newY := mCenterY - (GuiHeight // 2) + FinalOffsetY
 
       ShowOptions := "x" newX " y" newY " w" GuiWidth " h" GuiHeight
     }
   }
 
-  ; If the window already exists, move it to the new calculated spot
-  if IsSet(SettingsGui) && SettingsGui {
-    SettingsGui.Show(ShowOptions)
-    return
+  ; Duplicate prevention (same as before)
+  if IsSet(SettingsGui) {
+    try {
+      SettingsGui.Show(ShowOptions)
+      return
+    }
   }
 
+  ; Creation logic
   if (A_IsCompiled) {
     WebViewSettings := { DllPath: WebViewCtrl.TempDir "\" (A_PtrSize * 8) "bit\WebView2Loader.dll" }
   } else {
     WebViewSettings := {}
   }
 
-  ; Create the window safely
   SettingsGui := WebViewGui.Call("+AlwaysOnTop -Caption +Resize", "Edit mode.ini", , WebViewSettings)
   SettingsGui.OnEvent("Close", (*) => SettingsGui.Hide())
-
   SettingsGui.AddCallbackToScript("GetIniContent", WebGetIniContent)
   SettingsGui.AddCallbackToScript("SaveIniContent", WebSaveIniContent)
-
   SettingsGui.Navigate("Pages/settings.html")
-
-  ; Show the window using our calculated coordinates
   SettingsGui.Show(ShowOptions)
 }
 
@@ -318,7 +343,8 @@ WebSaveIniContent(WebView, content) {
 }
 
 WebReloadScript(WebView) {
-  Reload()
+  Run("launcher.ahk")
+  ExitApp()
 }
 
 WebGetModules(WebView) {
@@ -358,13 +384,13 @@ WebGetReadmes(WebView) {
   return jsonStr
 }
 
-global ReadmeTooltipGui := false
 
-#HotIf ReadmeTooltipGui
+#HotIf IsSet(ReadmeTooltipGui) && ReadmeTooltipGui
 ~LButton:: {
   global ReadmeTooltipGui
-  if ReadmeTooltipGui {
-    MouseGetPos(,, &hoverWin)
+  try {
+    MouseGetPos(, , &hoverWin)
+    ; If we clicked outside the tooltip, hide it
     if (hoverWin != ReadmeTooltipGui.Hwnd) {
       WebHideReadme()
     }
@@ -381,13 +407,13 @@ WebShowReadme(WebView, mod) {
   content := FileRead(filePath)
   if !RegExMatch(content, "(?si)/\*\s*\[readme\](.*?)\*/", &match)
     return
-  
-  cleanText := Trim(match[1], "`r`n ")
 
+  cleanText := Trim(match[1], "`r`n ")
   html := ParseMarkdownToHTML(cleanText)
 
-  if ReadmeTooltipGui {
-    ReadmeTooltipGui.Destroy()
+  ; SAFELY DESTROY OLD GUI TO PREVENT MEMORY LEAKS
+  if IsSet(ReadmeTooltipGui) && ReadmeTooltipGui {
+    try ReadmeTooltipGui.Destroy()
     ReadmeTooltipGui := false
   }
 
@@ -395,7 +421,7 @@ WebShowReadme(WebView, mod) {
   ReadmeTooltipGui.BackColor := "1e1e1e"
   ReadmeTooltipGui.MarginX := 0
   ReadmeTooltipGui.MarginY := 0
-  
+
   ; Use ActiveX to render HTML/Markdown
   wb := ReadmeTooltipGui.Add("ActiveX", "w400 h300", "Shell.Explorer").Value
   wb.Navigate("about:blank")
@@ -403,7 +429,7 @@ WebShowReadme(WebView, mod) {
     Sleep 10
   wb.document.write(html)
   wb.document.close()
-  
+
   MouseGetPos(&mX, &mY)
   dispX := mX + 25
   dispY := mY + 25
@@ -412,8 +438,10 @@ WebShowReadme(WebView, mod) {
 
 WebHideReadme(WebView := unset) {
   global ReadmeTooltipGui
-  if ReadmeTooltipGui {
-    ReadmeTooltipGui.Destroy()
+
+  ; SAFELY CHECK IF IT EXISTS BEFORE DESTROYING
+  if IsSet(ReadmeTooltipGui) && ReadmeTooltipGui {
+    try ReadmeTooltipGui.Destroy()
     ReadmeTooltipGui := false
   }
 }

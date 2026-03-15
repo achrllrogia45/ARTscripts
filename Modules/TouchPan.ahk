@@ -4,14 +4,7 @@
 
 /* [readme]
 # TouchPAN MODULE - README
-## FUNCTIONALITY:
-<p> - Remaps MButton to Space + LButton. </p>
-<p> - Specifically designed for Adobe panning using Middle Mouse Button. </p>
-## COMPATIBLE APPS:
-<p> 1. Photoshop </p>
-<p> 2. InDesign </p>
-<p> 3. Acrobat / Reader </p>
-<p> 4. Muse </p>
+#WIP - NOT YET FUNCTIONAL
 */
 ; Declare for linter
 global Toggles

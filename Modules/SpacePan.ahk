@@ -13,6 +13,9 @@
 <p> 3. Acrobat / Reader </p>
 <p> 4. Muse </p>
 */
+
+#Requires AutoHotkey v2.0
+
 ; Declare for linter
 global Toggles, IniFile
 global Spacepan_key := "MButton"
