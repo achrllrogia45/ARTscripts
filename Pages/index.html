@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modules</title>
     <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
@@ -228,10 +229,20 @@
         <div id="modules-container">
             <!-- Dynamic checkboxes will be generated here -->
         </div>
-
-        <button type="button" class="btn btn-reload" onclick="this.innerHTML='Syncing...'; if(window.ahk) ahk.ReloadScript(); setTimeout(() => this.innerHTML='RELOAD SCRIPT', 1000)">
+        <div class="d-flex flex-row gap-2">
+        <button type="button" class="btn btn-reload flex-grow-1" onclick="this.innerHTML='Syncing...'; if(window.ahk) ahk.ReloadScript(); setTimeout(() => this.innerHTML='RELOAD SCRIPT', 1000)">
             RELOAD SCRIPT
         </button>
+        <button type="button" class="btn btn-icon border-0 shadow-none" onclick="if(window.ahk) { ahk.ShowSettings().catch(e => alert(e)); }">
+        <i class="bi bi-gear-wide" 
+            style="color: var(--text-muted); font-size: 1.3rem; transition: color 0.2s;"
+            onmouseover="this.style.color='var(--text-main)'" 
+            onmouseout="this.style.color='var(--text-muted)'"
+            onmousedown="this.style.color='var(--accent-color)'"
+            >
+        </i>
+        </button>
+    </div>
     </div>
 
 <script>

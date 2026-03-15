@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit mode.ini</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/darcula.min.css">
+    <style>
+        :root {
+            --bg-dark: #161618;
+            --accent-color: #00ff88;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .ahk-titleBar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 44px;
+            padding: 0 12px 0 20px;
+            -webkit-app-region: drag;
+            user-select: none;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid #222;
+        }
+
+        .window-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .window-title::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--accent-color);
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 4px;
+            -webkit-app-region: no-drag;
+        }
+
+        .ctrl-btn-save {
+            width: 48px;
+            height: 20px;
+            margin-left: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            /* background-color: var(--text-muted); */
+            color: var(--accent-color);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-family: sans-serif;
+        }
+        .ctrl-btn-save:hover {
+            background-color: var(--accent-color);
+            color: var(--bg-dark);
+        }
+        .ctrl-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+
+        .ctrl-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-main);
+        }
+
+        .ctrl-btn-close:hover {
+            background: rgba(220, 53, 69, 0.9);
+            color: #fff;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-dark);
+        }
+
+        /* Override CodeMirror styles to match the theme */
+        .CodeMirror {
+            flex: 1;
+            height: auto;
+            background: transparent;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .CodeMirror-gutters {
+            background: transparent;
+            border-right: 1px solid #333;
+        }
+
+        .CodeMirror-vscrollbar, .CodeMirror-hscrollbar {
+            /* Tiny Custom Scrollbar */
+            width: 8px;
+        }
+        .CodeMirror-vscrollbar::-webkit-scrollbar, .CodeMirror-hscrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .CodeMirror-vscrollbar::-webkit-scrollbar-track, .CodeMirror-hscrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .CodeMirror-vscrollbar::-webkit-scrollbar-thumb, .CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        .CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover, .CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
+
+        .CodeMirror-scrollbar-filler {
+            background: transparent !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ahk-titleBar">
+        <div class="window-title">mode.ini
+          <div class="ctrl-btn-save" style="font-size: 0.57rem;" onclick="saveFile(this)">
+            <span style="transform: translateY(1.8px)">SAVE </span>
+          </div>
+        </div>
+        <div class="window-controls">
+            <div class="ctrl-btn" onclick="if(window.ahk) ahk.gui.Minimize()">─</div>
+            <div class="ctrl-btn ctrl-btn-close" onclick="if(window.ahk) ahk.gui.Hide()">✕</div>
+        </div>
+    </div>
+
+    <div class="content">
+        <textarea id="editor" spellcheck="false"></textarea>
+    </div>
+
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/properties/properties.min.js"></script>
+    <script>
+        let saveTimeout;
+        const editorElement = document.getElementById('editor');
+        
+        const cm = CodeMirror.fromTextArea(editorElement, {
+            mode: 'properties',
+            theme: 'darcula',
+            lineNumbers: true,
+            indentUnit: 4,
+            scrollbarStyle: 'native'
+        });
+
+        async function loadFile() {
+            if (window.ahk) {
+                const content = await ahk.GetIniContent();
+                cm.setValue(content);
+            }
+        }
+
+        function saveFile(btn) {
+            if (window.ahk) {
+                ahk.SaveIniContent(cm.getValue());
+                if (btn) {
+                    const oldHtml = btn.innerHTML;
+                    btn.innerHTML = '<span style="transform: translateY(1.8px)">SAVED</span>';
+                    setTimeout(() => btn.innerHTML = oldHtml, 1000);
+                }
+            }
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                const btn = document.querySelector('.ctrl-btn-save');
+                saveFile(btn);
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', loadFile);
+    </script>
+</body>
+</html>
