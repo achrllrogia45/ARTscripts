@@ -7,11 +7,8 @@
 ## FUNCTIONALITY
    <p> - Toggles Always On Top for the active window. </p>
    <p> - Displays a temporary on-screen message confirming the action. </p>
-## REQUIREMENTS
-   <p> - Must have a global 'Toggles' object defined in Main.ahk. </p>
-   <p> - Only works when 'AlwaysOnTop' key is set to 1. </p>
 ## CONFIGURATION
-    <p> - Set the hotkey for toggling Always On Top in the INI file under [AlwaysOnTop_config] with the key 'AlwaysOnTop_mode'. Default is F8. </p>
+    <p> - Set the hotkey for toggling Always On Top in the INI file under [AlwaysOnTop_config] with the key 'AlwaysOnTop_key'. Default is F8. </p>
 */
 
 ; Declare for linter
@@ -19,11 +16,17 @@ global Toggles, IniFile
 
 global HK_AOT_Action := ""
 
+aotConf := "AlwaysOnTop_config"
+
+
 Init_AlwaysOnTop() {
     global HK_AOT_Action
-    HK_AOT_Action := IniRead(IniFile, "AlwaysOnTop_config", "AlwaysOnTop_mode", "F8")
+    HK_AOT_Action := IniRead(IniFile, aotConf, "AlwaysOnTop_key", "F8")
     if (HK_AOT_Action != "null" && HK_AOT_Action != "") {
         Hotkey(HK_AOT_Action, Action_AOT)
+    }
+    if (IniRead(IniFile, aotConf, "AlwaysOnTop_key", "NOT_FOUND") = "NOT_FOUND") {
+        IniWrite("F8", IniFile, aotConf, "AlwaysOnTop_key")
     }
 }
 

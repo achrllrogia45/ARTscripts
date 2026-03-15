@@ -7,10 +7,9 @@
 ## FUNCTIONALITY
    <p> - Locks cursor to main screen. </p>
    <p> - Specifically designed for tablet/2nd screen use. </p>
-## REQUIREMENTS
-   <p> - Must have a global 'Toggles' object defined in Main.ahk. </p>
-   <p> - Only works when 'CursLock' key is set to 1. </p>
-
+## CONFIGURATION
+    <p>Set the main monitor resolution and 2nd monitor position in the INI file under
+    [Curslock_config] with the keys 'Monitor1_W', 'Monitor1_H', and 'Monitor2_Pos' could through button popup. </p>
 */
 
 ; Declare for linter
@@ -22,16 +21,40 @@ global Monitor2_Pos := "DOWN"
 global GuiScale := 1
 global GuiX_Offset := 0
 global GuiY_Offset := 0
+global TimerInterval := 5000
+global MaxMouseJump := 300
+global LastMouseX := 0
+global LastMouseY := 0
+global PenActive := false
+global prevX := 0
+global prevY := 0
+    
+clConf := "Curslock_config"
+
 
 Init_CursLock() {
-    global Monitor1_W, Monitor1_H, Monitor2_Pos, GuiScale, GuiX_Offset, GuiY_Offset
+
+    global Monitor1_W, Monitor1_H, Monitor2_Pos, GuiScale, GuiX_Offset, GuiY_Offset, IniFile
+   
+    ; Comment component
+    commentSection(IniFile, clConf, "; Set Your main monitor resolution")
+
+    if (IniRead(IniFile, clConf, "Monitor1_W", "") = "") {
+        IniWrite(1920, IniFile, clConf, "Monitor1_W")
+        IniWrite(1080, IniFile, clConf, "Monitor1_H")
+        IniWrite('"AUTO"', IniFile, clConf, "Monitor2_Pos")
+        IniWrite(1, IniFile, clConf, "GuiScale")
+        IniWrite(0, IniFile, clConf, "GuiX_Offset")
+        IniWrite(0, IniFile, clConf, "GuiY_Offset")
+    }
     
-    Monitor1_W := Integer(IniRead(IniFile, "Curslock_config", "Monitor1_W", "1920"))
-    Monitor1_H := Integer(IniRead(IniFile, "Curslock_config", "Monitor1_H", "1080"))
-    Monitor2_Pos := Trim(StrReplace(IniRead(IniFile, "Curslock_config", "Monitor2_Pos", '"DOWN"'), '"', ""), " `t")
-    GuiScale := Float(IniRead(IniFile, "Curslock_config", "GuiScale", "1"))
-    GuiX_Offset := Integer(IniRead(IniFile, "Curslock_config", "GuiX_Offset", "0"))
-    GuiY_Offset := Integer(IniRead(IniFile, "Curslock_config", "GuiY_Offset", "0"))
+    
+    Monitor1_W := Integer(IniRead(IniFile, clConf, "Monitor1_W", "1920"))
+    Monitor1_H := Integer(IniRead(IniFile, clConf, "Monitor1_H", "1080"))
+    Monitor2_Pos := Trim(StrReplace(IniRead(IniFile, clConf, "Monitor2_Pos", '"DOWN"'), '"', ""), " `t")
+    GuiScale := Float(IniRead(IniFile, clConf, "GuiScale", "1"))
+    GuiX_Offset := Integer(IniRead(IniFile, clConf, "GuiX_Offset", "0"))
+    GuiY_Offset := Integer(IniRead(IniFile, clConf, "GuiY_Offset", "0"))
     
     SetTimer(MonitorInput, 15)
 }
@@ -136,7 +159,7 @@ HideSelectorGui() {
 
 FinalizeChoice(choice) {
     global Monitor2_Pos := choice
-    IniWrite('"' Monitor2_Pos '"', IniFile, "Curslock_config", "Monitor2_Pos")
+    IniWrite('"' Monitor2_Pos '"', IniFile, clConf, "Monitor2_Pos")
     
     ; Call the Premium status display instead of ToolTip
     ShowPremiumStatus("2nd Monitor: " Monitor2_Pos "`nResolution: " Monitor1_W "x" Monitor1_H)

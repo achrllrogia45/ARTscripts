@@ -29,19 +29,51 @@ if not A_IsAdmin {
   ExitApp()
 }
 
-; --- Global Variables ---
-global TimerInterval := 5000
-global MaxMouseJump := 300
-global LastMouseX := 0
-global LastMouseY := 0
-global PenActive := false
-global prevX := 0
-global prevY := 0
-global LastCapsState := -1
+; ; 1. Define the "Block of Code" as a function
+; UpdateIni(IniFile, Section, Comment) {
+;   if !FileExist(IniFile)
+;     return
 
+;   FileContent := FileRead(IniFile)
+
+;   ; Check if comment already exists to avoid duplicates
+;   if !InStr(FileContent, Comment) {
+;     ; Logic: Find [Section] and add the comment underneath it
+;     Target := "[" Section "]"
+;     NewContent := StrReplace(FileContent, Target, Target "`n" Comment)
+
+;     FileObj := FileOpen(IniFile, "w")
+;     FileObj.Write(NewContent)
+;     FileObj.Close()
+;   }
+; }
+
+; --- 1. THE TEMPLATE (Define this once) ---
+commentSection(TargetFile, Section, CommentText) {
+  if !FileExist(TargetFile)
+    return
+
+  FileContent := FileRead(TargetFile)
+  CommentString := CommentText
+
+  if !InStr(FileContent, CommentText) {
+    Target := "[" Section "]"
+    NewContent := StrReplace(FileContent, Target, Target "`n" CommentText)
+
+    FileObj := FileOpen(TargetFile, "w")
+    FileObj.Write(NewContent)
+    FileObj.Close()
+  }
+}
+
+
+; --- Global Variables ---
 global IniFile := A_ScriptDir "\mode.ini"
 
+global Toggles := Map()
 global ActiveModules := []
+global ManagerGui
+  
 if !A_IsCompiled {
   loop read, A_ScriptDir "\modules.ahk" {
     if RegExMatch(A_LoopReadLine, "i)^\s*#Include\s+[`"']Modules[\\/](.*?)\.ahk[`"']", &match) {
@@ -49,7 +81,6 @@ if !A_IsCompiled {
     }
   }
 }
-global Toggles := Map()
 
 ; ==============================================================================
 ; INI GENERATOR
@@ -63,33 +94,6 @@ if !FileExist(IniFile) {
 ; ^ = CTRL
 ; + = SHIFT
 ; null = No hotkey assigned
-
-; On Off Hotkeys for GUI (0 = disabled, 1 = enabled)
-[GUI Hotkeys]
-
-
-[AlwaysOnTop_config]
-AlwaysOnTop_mode=F8
-
-; Toggle GUI (0 = disabled, 1 = enabled)
-[Toggles]
-
-
-[Settings]
-FkeyNumpad_mode=(F)KEY
-
-; GUI Settings for Curslock setting based your first monitor resolution
-[Curslock_config]
-Monitor1_W=1920
-Monitor1_H=1080
-Monitor2_Pos="DOWN"
-GuiScale=1
-GuiX_Offset=0
-GuiY_Offset=0
-
-[FkeyNumpad_config]
-X=null
-Y=50
     )"
 
   FileAppend(DefaultINI, IniFile)
@@ -198,7 +202,7 @@ ShowScriptsManager()
 ; MANAGER GUI & TOGGLE LOGIC
 ; ==============================================================================
 ShowScriptsManager(*) {
-  global ManagerGui
+  
 
   if IsSet(ManagerGui) && ManagerGui {
     ManagerGui.Show()
