@@ -4,29 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit mode.ini</title>
-    
     <!-- External Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    
     <!-- CodeMirror Base & Theme -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/darcula.min.css">
-    
     <!-- Link to our unified stylesheet -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body> 
 <!-- oncontextmenu="return false;" -->
 
-
-    <div class="grain"></div>
-
     <div class="slab">
+        <!-- FIX: Grain moved inside slab -->
+        <div class="grain"></div>
         <!-- New settings-layout strips padding so editor is flush -->
         <div class="slab-inner settings-layout">
-            
             <!-- Header (settings-header-wrap brings back padding just for the top area) -->
             <div class="header settings-header-wrap">
                 <div style="display: flex;">
@@ -53,9 +48,6 @@
             <div class="editor-container">
                 <textarea id="editor" spellcheck="false"></textarea>
             </div>
-
-            <!-- Footer intentionally removed -->
-
         </div>
     </div>
 

@@ -20,19 +20,16 @@ ShowScriptsManager(*) {
     WebViewSettings := {}
   }
 
-  ; [FIX] Added -Border to completely remove any white 1px Windows sizing frames
+  ; Create Window (Removed buggy transparency keys, keeping it standard)
   ManagerGui := WebViewGui.Call("+AlwaysOnTop -Caption -Border +Resize +MinSize", "Scripts Manager", , WebViewSettings)
 
-  ; ========================================================================
-  ; [CRITICAL FIX] CHROMA KEY TRANSPARENCY
-  ; Set the background to a unique dark color (#010101)
-  ; Then tell Windows to make anything that color physically invisible!
-  ; ========================================================================
-  ManagerGui.BackColor := "010101"
-  WinSetTransColor("010101 255", ManagerGui) ; [FIX] Added 255 alpha parameter to force solid rendering
+  if (VerCompare(A_OSVersion, "10.0.22000") >= 0) {
+    DllCall("dwmapi\DwmSetWindowAttribute", "ptr", ManagerGui.Hwnd, "int", 34, "int*", 0xFFFFFFFE, "int", 4)
+  }
 
-  ; We no longer need the Size event or ApplyCutCorners!
+  ; Map Events
   ManagerGui.OnEvent("Close", (*) => ManagerGui.Hide())
+  ManagerGui.OnEvent("Size", ApplyWindowShape) ; <--- Hook window reshaping on resize
 
   ManagerGui.AddCallbackToScript("GetModules", WebGetModules)
   ManagerGui.AddCallbackToScript("GetToggles", WebGetToggles)
@@ -44,7 +41,9 @@ ShowScriptsManager(*) {
   ManagerGui.AddCallbackToScript("ShowSettings", WebShowSettings)
 
   ManagerGui.Navigate("Pages/index.html")
+
   ManagerGui.Show("w400 h600")
+  ApplyWindowShape(ManagerGui) ; <--- Physically cut corners immediately after showing
 }
 
 WebShowSettings(WebView := "", *) {
@@ -70,15 +69,11 @@ LaunchSettingsGui() {
   ParseUnit(val) {
     if IsNumber(val)
       return val
-
     unit := RegExReplace(val, "i)[0-9.\-]", "")
     numStr := RegExReplace(val, "i)[^0-9.\-]", "")
-
     if (numStr = "")
       return 0
-
     num := Float(numStr)
-
     if (unit = "em")
       return num * DynamicBase
     return num
@@ -99,13 +94,10 @@ LaunchSettingsGui() {
   try {
     if WinExist("Scripts Manager") {
       WinGetPos(&mX, &mY, &mW, &mH, "Scripts Manager")
-
       mCenterX := mX + (mW // 2)
       mCenterY := mY + (mH // 2)
-
       newX := mCenterX - (GuiWidth // 2) + OffsetX
       newY := mCenterY - (GuiHeight // 2) + OffsetY
-
       ShowOptions := "x" newX " y" newY " w" GuiWidth " h" GuiHeight
     }
   }
@@ -123,21 +115,45 @@ LaunchSettingsGui() {
     WebViewSettings := {}
   }
 
-  ; [FIX] Added -Border here too
   SettingsGui := WebViewGui.Call("+AlwaysOnTop -Caption -Border +Resize +MinSize360x600", "Edit mode.ini", ,
     WebViewSettings)
 
-  ; [CRITICAL FIX] Apply the exact same transparency trick to the Settings Window
-  SettingsGui.BackColor := "010101"
-  WinSetTransColor("010101 255", SettingsGui) ; [FIX] Added 255 alpha
+  if (VerCompare(A_OSVersion, "10.0.22000") >= 0) {
+    DllCall("dwmapi\DwmSetWindowAttribute", "ptr", SettingsGui.Hwnd, "int", 34, "int*", 0xFFFFFFFE, "int", 4)
+  }
 
   SettingsGui.OnEvent("Close", (*) => SettingsGui.Hide())
+  SettingsGui.OnEvent("Size", ApplyWindowShape) ; <--- Hook window reshaping on resize
 
   SettingsGui.AddCallbackToScript("GetIniContent", WebGetIniContent)
   SettingsGui.AddCallbackToScript("SaveIniContent", WebSaveIniContent)
+
   SettingsGui.Navigate("Pages/settings.html")
+
   SettingsGui.Show(ShowOptions)
+  ApplyWindowShape(SettingsGui) ; <--- Physically cut corners immediately after showing
 }
+
+; ==============================================================================
+; WINDOW SHAPER (Native OS Cut instead of bugged WebView Transparency)
+; ==============================================================================
+ApplyWindowShape(GuiObj, MinMax := 0, W := 0, H := 0) {
+  if (MinMax == -1) ; Skip if window is minimized
+    return
+
+  ; If dimensions weren't passed by the Size event, grab them manually
+  if (!W || !H)
+    GuiObj.GetClientPos(, , &W, &H)
+
+  ; Creates a 6-point polygon matching CSS clip-path exactly (15px cut top-left/bottom-right)
+  RegionStr := "0-25 25-0 " W "-0 " W "-" (H - 25) " " (W - 25) "-" H " 0-" H " 0-25"
+
+  try WinSetRegion(RegionStr, "ahk_id " GuiObj.Hwnd)
+}
+
+; ==============================================================================
+; WEB-TO-AHK CALLBACKS
+; ==============================================================================
 
 WebGetIniContent(WebView) {
   global IniFile
