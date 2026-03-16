@@ -77,7 +77,6 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            /* background-color: var(--text-muted); */
             color: var(--accent-color);
             border-radius: 6px;
             transition: all 0.2s ease;
@@ -119,13 +118,12 @@
             background: var(--bg-dark);
         }
 
-        /* Override CodeMirror styles to match the theme */
         .CodeMirror {
             flex: 1;
             height: auto;
             background: transparent;
             font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 13px;
+            font-size: 14px; /* Bumped up slightly for readability */
             line-height: 1.5;
         }
 
@@ -135,7 +133,6 @@
         }
 
         .CodeMirror-vscrollbar, .CodeMirror-hscrollbar {
-            /* Tiny Custom Scrollbar */
             width: 8px;
         }
         .CodeMirror-vscrollbar::-webkit-scrollbar, .CodeMirror-hscrollbar::-webkit-scrollbar {
@@ -156,6 +153,20 @@
         .CodeMirror-scrollbar-filler {
             background: transparent !important;
         }
+
+        /* =========================================================
+           CUSTOM VIBRANT INI SYNTAX HIGHLIGHTING (Fixed!)
+           ========================================================= */
+        .cm-s-darcula .cm-comment    { color: #629755 !important; font-style: italic; } /* Muted Green Comments */
+        .cm-s-darcula .cm-header     { color: #589df6 !important; font-weight: bold; }  /* Bright Blue [Sections] */
+        .cm-s-darcula .cm-keyword    { color: #d0d0d0 !important; }                     /* Crisp White/Grey Keys */
+        .cm-s-darcula .cm-operator   { color: #cc7832 !important; }                     /* Orange Equals Sign '=' */
+        .cm-s-darcula .cm-number     { color: #6897bb !important; }                     /* Light Blue for Numbers */
+        .cm-s-darcula .cm-builtin    { color: #e8bf6a !important; font-weight: bold; }  /* Yellow AHK Modifiers (^!+#) */
+        .cm-s-darcula .cm-string     { color: #a5c261 !important; }                     /* Olive for normal text values */
+        .cm-s-darcula .cm-bool-true  { color: #67c279 !important; font-weight: bold; }  /* Balanced Green (true/yes/on) */
+        .cm-s-darcula .cm-bool-false { color: #d16969 !important; font-weight: bold; }  /* Soft Red (false/no/off) */
+        .cm-s-darcula .cm-atom       { color: #c678dd !important; font-weight: bold; }  /* Purple (null/toggle) */
     </style>
 </head>
 <body>
@@ -176,15 +187,57 @@
         <textarea id="editor" spellcheck="false"></textarea>
     </div>
 
-    <!-- CodeMirror JS -->
+    <!-- CodeMirror JS Base -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/properties/properties.min.js"></script>
+    <!-- CodeMirror Simple Mode Addon -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/simple.min.js"></script>
+    
     <script>
+        // REDESIGNED: Single-State Left-to-Right Parser avoids State Bleeding bugs!
+        CodeMirror.defineSimpleMode("ini-colorful", {
+            start: [
+                // 1. Comments (Using AHK-style semicolons)
+                { regex: /^[ \t]*;.*/, token: "comment" },
+                
+                // 2. Section Headers [Section]
+                { regex: /^[ \t]*\[[^\]]+\]/, token: "header" },
+                
+                // 3. Keys and '=' Sign - Only triggers at the START (^) of a line
+                { regex: /^([ \t]*)([^=]+?)([ \t]*=[ \t]*)/, token: [null, "keyword", "operator"] },
+                
+                // --- EVERYTHING BELOW RUNS ON THE "VALUE" SIDE OF THE LINE ---
+                
+                // 4. Inline comments
+                { regex: /;.*/, token: "comment" },
+                
+                // 5. Strings enclosed in Quotes (e.g., "AUTO")
+                { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
+                { regex: /'(?:[^\\]|\\.)*?(?:'|$)/, token: "string" },
+                
+                // 6. Special keywords (SPLIT FOR SPECIFIC COLORS)
+                { regex: /\b(?:true|yes|on)\b/i, token: "bool-true" },
+                { regex: /\b(?:false|no|off)\b/i, token: "bool-false" },
+                { regex: /\b(?:null|toggle)\b/i, token: "atom" },
+                
+                // 7. Numbers
+                { regex: /[-+]?\d+(?:\.\d+)?/, token: "number" },
+                
+                // 8. AutoHotkey Hotkey Modifiers (^ = Ctrl, ! = Alt, + = Shift, # = Win)
+                { regex: /[\^!+#]+/, token: "builtin" },
+                
+                // 9. Catch-all: Any remaining text becomes standard string
+                { regex: /[^;\s]+/, token: "string" },
+                
+                // 10. Whitespace consumer
+                { regex: /[ \t]+/, token: null }
+            ]
+        });
+
         let saveTimeout;
         const editorElement = document.getElementById('editor');
         
         const cm = CodeMirror.fromTextArea(editorElement, {
-            mode: 'properties',
+            mode: 'ini-colorful', // Uses the newly rebuilt parser
             theme: 'darcula',
             lineNumbers: true,
             indentUnit: 4,

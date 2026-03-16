@@ -12,9 +12,9 @@
 */
 #Requires AutoHotkey v2.0
 ; Declare for linter
-global Toggles, IniFile
 
 global HK_AOT_Action := ""
+global Toggles, IniFile
 
 aotConf := "AlwaysOnTop_config"
 
@@ -25,7 +25,7 @@ Init_AlwaysOnTop() {
     if (HK_AOT_Action != "null" && HK_AOT_Action != "") {
         Hotkey(HK_AOT_Action, Action_AOT)
     }
-    if (IniRead(IniFile, aotConf, "AlwaysOnTop_key", "NOT_FOUND") = "NOT_FOUND") {
+    if (IniRead(IniFile, aotConf, "AlwaysOnTop_key", "") = "") {
         IniWrite("F8", IniFile, aotConf, "AlwaysOnTop_key")
     }
 }

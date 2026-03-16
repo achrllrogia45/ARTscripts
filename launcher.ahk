@@ -9,11 +9,12 @@ UpdateAndLaunch() {
 
   ; Mandatory Lib includes
   NewContent := "#Requires AutoHotkey v2.0`n`n"
-  NewContent .= "; ==============================================================================`n"
-  NewContent .= "; DON'T TOUCH BELOW UNLESS YOU KNOW WHAT YOU'RE DOING`n"
-  NewContent .= '#Include "Lib\WebViewToo.ahk"`n'
-  NewContent .= '#Include "Lib\markdown.ahk"`n'
-  NewContent .= "; ==============================================================================`n`n"
+  ; NewContent .= "; ==============================================================================`n"
+  ; NewContent .= '#Include "Lib\WebViewToo.ahk"`n'
+  ; NewContent .= '#Include "Lib\markdown.ahk"`n'
+  ; NewContent .= '#Include "lib\ConfigManager.ahk"`n'
+  ; NewContent .= '#Include "lib\UIManager.ahk"`n'
+  ; NewContent .= "; ==============================================================================`n`n"
 
   ; Scan current modules 
   if DirExist(ModulesDir) {
