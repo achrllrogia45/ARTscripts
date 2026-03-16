@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modules</title>
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="ahk-titleBar">
+        <div class="window-title">Scripts Modules</div>
+        <div class="window-controls">
+            <div class="ctrl-btn" onclick="if(window.ahk) ahk.gui.Minimize()">─</div>
+            <div class="ctrl-btn ctrl-btn-close" onclick="if(window.ahk) ahk.gui.Hide()">✕</div>
+        </div>
+    </div>
+
+<div class="content" id="main-content">
+        <div id="modules-container">
+            <!-- Dynamic checkboxes will be generated here -->
+        </div>
+        <div class="d-flex flex-row gap-2">
+        <button type="button" class="btn btn-reload flex-grow-1" onclick="this.innerHTML='Syncing...'; if(window.ahk) ahk.ReloadScript(); setTimeout(() => this.innerHTML='RELOAD SCRIPT', 1000)">
+            RELOAD SCRIPT
+        </button>
+        <button type="button" class="btn btn-icon border-0 shadow-none" onclick="if(window.ahk) { ahk.ShowSettings().catch(e => alert(e)); }">
+        <i class="bi bi-gear-wide" 
+            style="color: var(--text-muted); font-size: 1.3rem; transition: color 0.2s;"
+            onmouseover="this.style.color='var(--text-main)'" 
+            onmouseout="this.style.color='var(--text-muted)'"
+            onmousedown="this.style.color='var(--accent-color)'"
+            >
+        </i>
+        </button>
+    </div>
+    </div>
+
+<script>
+    // Initialize checkboxes from AHK dynamically
+    async function initCheckboxes() {
+        if (!window.ahk) return;
+
+        try {
+            const modulesStr = await ahk.GetModules();
+            const modules = JSON.parse(modulesStr);
+            
+            const resultStr = await ahk.GetToggles();
+            const toggles = JSON.parse(resultStr);
+
+            const readmesStr = await ahk.GetReadmes();
+            const readmes = JSON.parse(readmesStr);
+
+            const container = document.getElementById('modules-container');
+            container.innerHTML = '';
+
+            modules.forEach(mod => {
+                const isChecked = toggles[mod] == 1 || toggles[mod] == true ? 'checked' : '';
+                const hasReadme = readmes[mod] == 1 || readmes[mod] === true;
+                const helpIcon = hasReadme ? `<span class="help-icon" onClick="showReadme('${mod}')">?</span>` : ``;
+
+                container.innerHTML += `
+                    <div class="form-check">
+                        <label class="form-check-label" for="${mod}">${mod}</label>
+                        <div style="display:flex; align-items:center; gap:12px; order:2;">
+                            ${helpIcon}
+                            <input class="form-check-input" type="checkbox" id="${mod}" style="order:unset" ${isChecked} onchange="updateToggle('${mod}', this.checked)">
+                        </div>
+                    </div>
+                `;
+            });
+        } catch (e) {
+            console.error("Failed to load toggles", e);
+        }
+    }
+
+    function showReadme(mod) {
+        if (window.ahk) {
+            ahk.ShowReadme(mod);
+        }
+    }
+
+    function hideReadme() {
+        if (window.ahk) {
+            ahk.HideReadme();
+        }
+    }
+
+    // Send toggle state to AHK
+    function updateToggle(name, value) {
+        if (window.ahk) {
+            ahk.UpdateToggle(name, value ? 1 : 0);
+        }
+    }
+
+    // Run on load
+    window.addEventListener('DOMContentLoaded', () => {
+        initCheckboxes();
+    });
+</script>
+
+</body>
+</html>

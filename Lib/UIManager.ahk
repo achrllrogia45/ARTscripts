@@ -4,18 +4,14 @@
 ; ==============================================================================
 
 ShowScriptsManager(*) {
-  global ManagerGui ; CRITICAL: Forces AHK to remember the window
-
-
+  global ManagerGui
 
   if IsSet(ManagerGui) && ManagerGui {
     try {
       ManagerGui.Show()
-      return ;
+      return
     }
   }
-
-  ; --- CREATION CODE (Only runs the very first time) ---
 
   if (A_IsCompiled) {
     WebViewCtrl.CreateFileFromResource((A_PtrSize * 8) "bit\WebView2Loader.dll", WebViewCtrl.TempDir)
@@ -24,9 +20,18 @@ ShowScriptsManager(*) {
     WebViewSettings := {}
   }
 
-  ManagerGui := WebViewGui.Call("+AlwaysOnTop -Caption +Resize", "Scripts Manager", , WebViewSettings)
+  ; [FIX] Added -Border to completely remove any white 1px Windows sizing frames
+  ManagerGui := WebViewGui.Call("+AlwaysOnTop -Caption -Border +Resize +MinSize", "Scripts Manager", , WebViewSettings)
 
-  ; This keeps the object alive in the background when the user closes it
+  ; ========================================================================
+  ; [CRITICAL FIX] CHROMA KEY TRANSPARENCY
+  ; Set the background to a unique dark color (#010101)
+  ; Then tell Windows to make anything that color physically invisible!
+  ; ========================================================================
+  ManagerGui.BackColor := "010101"
+  WinSetTransColor("010101 255", ManagerGui) ; [FIX] Added 255 alpha parameter to force solid rendering
+
+  ; We no longer need the Size event or ApplyCutCorners!
   ManagerGui.OnEvent("Close", (*) => ManagerGui.Hide())
 
   ManagerGui.AddCallbackToScript("GetModules", WebGetModules)
@@ -39,7 +44,7 @@ ShowScriptsManager(*) {
   ManagerGui.AddCallbackToScript("ShowSettings", WebShowSettings)
 
   ManagerGui.Navigate("Pages/index.html")
-  ManagerGui.Show("w260 h380")
+  ManagerGui.Show("w400 h600")
 }
 
 WebShowSettings(WebView := "", *) {
@@ -49,16 +54,8 @@ WebShowSettings(WebView := "", *) {
 LaunchSettingsGui() {
   global SettingsGui, ManagerGui, IniFile
 
-  ; =========================================
-  ; GUI SETTINGS POSITIONING VARIABLES
-  ; =========================================
-  ; --- Dynamic Scaling Math ---
-  ; 1920 / 120 = 16px (Standard).
-  ; On a 4K screen: 3840 / 120 = 32px.
   DynamicBase := A_ScreenWidth / 120
-  
 
-  ; Auto-populate the .ini file with default overrides so the user can see them
   if !FileExist(IniFile) || IniRead(IniFile, "SettingsGui", "OffsetX", "") = "" {
     IniWrite("20em", IniFile, "SettingsGui", "OffsetX")
     IniWrite("6.9em", IniFile, "SettingsGui", "OffsetY")
@@ -67,18 +64,16 @@ LaunchSettingsGui() {
   }
 
   commentSection(IniFile, "SettingsGui",
-    "; --- Positioningcan be set in em (relative to screen width) or px (absolute). E.g. 20em or 300px. Default is 20em for X and 6.9em for Y (roughly center on 1080p)."
+    "; --- Positioning can be set in em (relative to screen width) or px (absolute). E.g. 20em or 300px. Default is 20em for X and 6.9em for Y (roughly center on 1080p)."
   )
 
   ParseUnit(val) {
     if IsNumber(val)
       return val
 
-    ; Safely escape the hyphen \- in RegEx to prevent range errors
     unit := RegExReplace(val, "i)[0-9.\-]", "")
     numStr := RegExReplace(val, "i)[^0-9.\-]", "")
 
-    ; FIX: If the INI returned an empty string, prevent Float() from crashing
     if (numStr = "")
       return 0
 
@@ -89,21 +84,16 @@ LaunchSettingsGui() {
     return num
   }
 
-  ; Read directly from IniFile. If the file/key is missing, it defaults to the 4th parameter.
   OffsetX_Raw := IniRead(IniFile, "SettingsGui", "OffsetX", "20em")
   OffsetY_Raw := IniRead(IniFile, "SettingsGui", "OffsetY", "6.9em")
   GuiWidth_Raw := IniRead(IniFile, "SettingsGui", "Width", "360")
   GuiHeight_Raw := IniRead(IniFile, "SettingsGui", "Height", "600")
 
-  ; Parse the units and Round() them to integers (GUI coordinates shouldn't be decimals)
   OffsetX := Round(ParseUnit(OffsetX_Raw))
   OffsetY := Round(ParseUnit(OffsetY_Raw))
   GuiWidth := Round(ParseUnit(GuiWidth_Raw))
   GuiHeight := Round(ParseUnit(GuiHeight_Raw))
 
-  ; =========================================
-
-  ; Default fallback
   ShowOptions := "xCenter yCenter w" GuiWidth " h" GuiHeight
 
   try {
@@ -120,7 +110,6 @@ LaunchSettingsGui() {
     }
   }
 
-  ; Duplicate prevention
   if IsSet(SettingsGui) && SettingsGui {
     try {
       SettingsGui.Show(ShowOptions)
@@ -128,15 +117,22 @@ LaunchSettingsGui() {
     }
   }
 
-  ; Creation logic
   if (A_IsCompiled) {
     WebViewSettings := { DllPath: WebViewCtrl.TempDir "\" (A_PtrSize * 8) "bit\WebView2Loader.dll" }
   } else {
     WebViewSettings := {}
   }
 
-  SettingsGui := WebViewGui.Call("+AlwaysOnTop -Caption +Resize", "Edit mode.ini", , WebViewSettings)
+  ; [FIX] Added -Border here too
+  SettingsGui := WebViewGui.Call("+AlwaysOnTop -Caption -Border +Resize +MinSize360x600", "Edit mode.ini", ,
+    WebViewSettings)
+
+  ; [CRITICAL FIX] Apply the exact same transparency trick to the Settings Window
+  SettingsGui.BackColor := "010101"
+  WinSetTransColor("010101 255", SettingsGui) ; [FIX] Added 255 alpha
+
   SettingsGui.OnEvent("Close", (*) => SettingsGui.Hide())
+
   SettingsGui.AddCallbackToScript("GetIniContent", WebGetIniContent)
   SettingsGui.AddCallbackToScript("SaveIniContent", WebSaveIniContent)
   SettingsGui.Navigate("Pages/settings.html")
@@ -206,7 +202,6 @@ WebGetReadmes(WebView) {
   global ReadmeTooltipGui
   try {
     MouseGetPos(, , &hoverWin)
-    ; If we clicked outside the tooltip, hide it
     if (hoverWin != ReadmeTooltipGui.Hwnd) {
       WebHideReadme()
     }
@@ -227,7 +222,6 @@ WebShowReadme(WebView, mod) {
   cleanText := Trim(match[1], "`r`n ")
   html := ParseMarkdownToHTML(cleanText)
 
-  ; SAFELY DESTROY OLD GUI TO PREVENT MEMORY LEAKS
   if IsSet(ReadmeTooltipGui) && ReadmeTooltipGui {
     try ReadmeTooltipGui.Destroy()
     ReadmeTooltipGui := false
@@ -238,7 +232,6 @@ WebShowReadme(WebView, mod) {
   ReadmeTooltipGui.MarginX := 0
   ReadmeTooltipGui.MarginY := 0
 
-  ; Use ActiveX to render HTML/Markdown
   wb := ReadmeTooltipGui.Add("ActiveX", "w400 h300", "Shell.Explorer").Value
   wb.Navigate("about:blank")
   while wb.readyState != 4
@@ -254,8 +247,6 @@ WebShowReadme(WebView, mod) {
 
 WebHideReadme(WebView := unset) {
   global ReadmeTooltipGui
-
-  ; SAFELY CHECK IF IT EXISTS BEFORE DESTROYING
   if IsSet(ReadmeTooltipGui) && ReadmeTooltipGui {
     try ReadmeTooltipGui.Destroy()
     ReadmeTooltipGui := false

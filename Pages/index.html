@@ -3,310 +3,515 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modules</title>
-    <!-- Bootstrap 5 CSS -->
+    <title>System Core</title>
+    <!-- Tailwind CSS (Required for base styling of the new UI) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-dark: #161618;
-            --accent-color: #00ff88; /* Cyberpunk Green */
-            --text-main: #e0e0e0;
-            --text-muted: #888;
+            --basalt-900: #0a0a0b;
+            --basalt-800: #161618;
+            --basalt-700: #242427;
+            --basalt-600: #323236;
+            --pressure-glow: rgba(0, 255, 170, 0.15);
+            --accent: #00ffaa;
+            --critical: #ff4444;
+            --text-main: #e2e2e7;
         }
 
+        /* Update 1: Change body width/height */
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
+        background-color: #010101;  /* <--- CHANGE THIS FROM 'transparent' */
+        color: var(--text-main);
+        font-family: 'Outfit', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100vw;       
+        height: 100vh;      
+        margin: 0;
+        overflow: hidden;
+        user-select: none;
+        }
+
+        /* Update 2: Make the slab responsive */
+        .slab {
+            background: var(--basalt-800);
+            width: 100%;        /* CHANGED from 520px to 100% */
+            height: 100%;       /* CHANGED to 100% */
+            box-sizing: border-box; /* ADDED */
+            padding: 2px;
+            box-shadow: 
+                0 0 0 1px var(--basalt-700),
+                20px 20px 60px rgba(0,0,0,0.8);
+            position: relative;
+            clip-path: polygon(
+                0% 15px, 15px 0%, 
+                100% 0%, 100% calc(100% - 15px), 
+                calc(100% - 15px) 100%, 0% 100%
+            );
+        }
+
+        .slab-inner {
+            background: var(--basalt-800);
+            padding: 32px;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Inter', -apple-system, sans-serif;
-            letter-spacing: -0.02em;
-            border: 1px solid #333;
-            border-radius: 12px;
-            box-sizing: border-box;
-            overflow: hidden;
-            /* user-select: none; */
+            -webkit-app-region: drag; /* Makes window draggable */
         }
 
-        .ahk-titleBar {
+        /* Friction-Fit Header */
+        .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            height: 44px;
-            padding: 0 12px 0 20px;
-            -webkit-app-region: drag;
-            user-select: none;
-            background: rgba(0,0,0,0.2);
-            border-bottom: 1px solid #222;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            border-bottom: 4px solid var(--basalt-700);
+            padding-bottom: 12px;
+            
         }
 
-        .window-title {
-            font-size: 0.75rem;
+        .header h1 {
+            font-weight: 900;
             text-transform: uppercase;
-            color: var(--text-muted);
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            letter-spacing: -0.05em;
+            font-size: 1.5rem;
+            line-height: 0.8;
+            margin-top: 4px;
         }
 
-        .window-title::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--accent-color);
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 8px var(--accent-color);
+        .header span.brand {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        /* Enhanced Window Controls */
+        .win-rheader {
+            justify-items: right;
+            align-items: center;
+            gap: 12px;
+            -webkit-app-region: no-drag;
         }
 
         .window-controls {
             display: flex;
             gap: 4px;
+            margin-top: 0px; 
+            justify-content: flex-end;
+        }
+
+        .win-btn {
+            width: 32px;
+            height: 32px;
+            background: var(--basalt-700);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            border: 1px solid transparent;
+        }
+
+        .win-btn:hover {
+            background: var(--basalt-600);
+            border-color: var(--accent);
+        }
+
+        .win-btn.close:hover {
+            background: var(--critical);
+            border-color: var(--critical);
+        }
+
+        /* Icons */
+        .icon-min { width: 12px; height: 2px; background: #6a6a70; transition: background 0.2s; }
+        .icon-close { width: 14px; height: 14px; position: relative; }
+        .icon-close::before, .icon-close::after {
+            content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
+            background: #6a6a70; transition: background 0.2s;
+        }
+        .icon-close::before { transform: rotate(45deg); }
+        .icon-close::after { transform: rotate(-45deg); }
+
+        /* Hover States for Icons */
+        .win-btn:hover .icon-min { background: var(--accent); }
+        .win-btn:hover .icon-close::before, .win-btn:hover .icon-close::after { background: var(--accent); }
+        .win-btn.close:hover .icon-close::before, .win-btn.close:hover .icon-close::after { background: var(--basalt-900); }
+
+        .update-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: block;
+            margin-top: 6px;
+        }
+        .update-link:hover { opacity: 0.7; }
+
+        /* Update 3: Allow the list of scripts to shrink/grow infinitely */
+        .script-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px; 
+            flex: 1;           /* ADDED: Pushes the footer down and stretches */
+            /* max-height: 380px; --- REMOVE THIS LINE ENTIRELY */
+            overflow-y: auto;
+            padding-right: 6px;
             -webkit-app-region: no-drag;
         }
 
-        .ctrl-btn {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            justify-content: center;
+        /* Custom Scrollbar for the list */
+        .script-list::-webkit-scrollbar { width: 4px; }
+        .script-list::-webkit-scrollbar-track { background: var(--basalt-800); }
+        .script-list::-webkit-scrollbar-thumb { background: var(--basalt-600); border-radius: 4px; }
+        .script-list::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        .script-item {
+            background: var(--basalt-700);
+            padding: 16px;
+            display: grid;
+            /* FIXED: Force column sizes. Handle(12px), Checkbox(30px), Text(Remaining), Help(20px) */
+            grid-template-columns: 12px 30px minmax(0, 1fr) 20px;
+            gap: 12px; /* Added gap to keep things spaced cleanly */
             align-items: center;
+            cursor: grab;
+            transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            border-left: 0px solid var(--accent);
+        }
+
+        .script-item:hover {
+            background: var(--basalt-600);
+            transform: translateX(4px);
+            border-left: 4px solid var(--accent);
+            box-shadow: -10px 0 20px rgba(0, 255, 170, 0.05);
+        }
+
+        .handle {
+            width: 12px;
+            height: 20px;
+            background-image: radial-gradient(var(--basalt-600) 1.5px, transparent 0);
+            background-size: 4px 4px;
+            opacity: 0.5;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            color: var(--text-muted);
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            font-family: sans-serif;
-            font-size: 14px;
         }
 
-        .ctrl-btn:hover {
-            background: rgba(255,255,255,0.1);
-            color: var(--text-main);
+        .checkbox-container input { display: none; }
+
+        .latch {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--basalt-600);
+            position: relative;
+            transition: all 0.3s ease;
         }
 
-        .ctrl-btn-close:hover {
-            background: rgba(220, 53, 69, 0.9);
-            color: #fff;
+        .checkbox-container input:checked + .latch {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--pressure-glow);
         }
 
-        .content {
-            padding: 20px 24px;
-            flex: 1;
+        .checkbox-container input:checked + .latch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            width: 4px;
+            height: 8px;
+            border: solid var(--basalt-900);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .script-info { 
+            /* FIXED: min-width: 0 is a grid hack that allows text children to wrap! */
+            min-width: 0; 
+            padding-left: 0; 
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            overflow: hidden;
-            user-select: none;
         }
 
-        #modules-container {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 6px;
-            margin-bottom: 12px;
+        .script-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: block;
         }
 
-        /* Tiny Custom Scrollbar */
-        #modules-container::-webkit-scrollbar {
-            width: 4px;
-        }
-        #modules-container::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-        #modules-container::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 4px;
-        }
-        #modules-container::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-color);
+        .script-meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: #6a6a70;
+            display: block;
+            margin-top: 4px;
+            /* FIXED: Force the long path text to wrap onto a new line */
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.3;
         }
 
-        /* Minimalist Checkbox Styling */
-        .form-check {
-            padding-left: 0;
-            margin-bottom: 12px;
+        /* Tooltip Component */
+        .info-trigger {
+            width: 20px;
+            height: 20px;
+            border: 1px solid var(--basalt-600);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: #6a6a70;
+            cursor: help;
+            transition: all 0.2s;
+            border-radius: 2px;
+            position: relative;
+            justify-self: end; /* Push firmly to the right edge */
+            flex-shrink: 0;    /* Prevent it from being squished */
         }
 
-        .form-check-label {
-            font-size: 0.9rem;
-            color: var(--text-main);
-            order: 1;
-            cursor: pointer;
+        .info-trigger:hover {
+            background: var(--accent);
+            color: var(--basalt-900);
+            border-color: var(--accent);
         }
 
-        .form-check .form-check-input {
-            order: 2;
-            float: none;
-            margin: 0 !important;
-            background-color: #222;
-            border: 1px solid #333;
-            width: 1.2em;
-            height: 1.2em;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .tooltip {
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%) translateX(-10px);
+            background: var(--accent);
+            color: var(--basalt-900);
+            padding: 8px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s;
+            clip-path: polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%);
+            z-index: 10;
         }
 
-        .form-check .form-check-input:checked {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-            filter: drop-shadow(0 0 5px rgba(0, 255, 136, 0.4));
+        .info-trigger:hover .tooltip {
+            opacity: 1;
+            transform: translateY(-50%) translateX(-20px);
         }
 
-        .form-check .form-check-input:focus {
-            box-shadow: none;
-            border-color: var(--accent-color);
+        .grain {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
-        /* Minimalist Reload Button */
-        .btn-reload {
-            width: 100%;
-            margin-top: auto;
-            margin-bottom: 4px;
-            background: transparent;
-            border: 1px solid #333;
-            color: var(--text-main);
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 10px;
-            border-radius: 8px;
-            transition: all 0.2s ease;
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .btn-reload:hover {
-            background: #fff;
-            color: #000;
-            border-color: #fff;
-            transform: translateY(-1px);
+        .script-item {
+            animation: slideIn 0.4s ease forwards;
+            animation-delay: calc(var(--i) * 0.05s);
+            opacity: 0;
         }
 
-        .btn-reload:active {
-            transform: translateY(0);
-        }
-
-        /* Subtle Module Hover Effect */
-        .form-check:hover .form-check-label {
-            color: var(--accent-color);
+        .footer-controls {
+            margin-top: 24px;
+            display: flex;
+            gap: 8px;
+            -webkit-app-region: no-drag;
         }
     </style>
-<style>
-    .help-icon {
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background-color: #555;
-        color: #fff;
-        font-size: 12px;
-        font-weight: bold;
-        cursor: help;
-        user-select: none;
-    }
-    .help-icon:hover {
-        background-color: #777;
-    }
-</style>
 </head>
 <body oncontextmenu="return false;">
 
-    <div class="ahk-titleBar">
-        <div class="window-title">Scripts Modules</div>
-        <div class="window-controls">
-            <div class="ctrl-btn" onclick="if(window.ahk) ahk.gui.Minimize()">─</div>
-            <div class="ctrl-btn ctrl-btn-close" onclick="if(window.ahk) ahk.gui.Hide()">✕</div>
-        </div>
-    </div>
+    <div class="grain"></div>
 
-<div class="content" id="main-content">
-        <div id="modules-container">
-            <!-- Dynamic checkboxes will be generated here -->
-        </div>
-        <div class="d-flex flex-row gap-2">
-        <button type="button" class="btn btn-reload flex-grow-1" onclick="this.innerHTML='Syncing...'; if(window.ahk) ahk.ReloadScript(); setTimeout(() => this.innerHTML='RELOAD SCRIPT', 1000)">
-            RELOAD SCRIPT
-        </button>
-        <button type="button" class="btn btn-icon border-0 shadow-none" onclick="if(window.ahk) { ahk.ShowSettings().catch(e => alert(e)); }">
-        <i class="bi bi-gear-wide" 
-            style="color: var(--text-muted); font-size: 1.3rem; transition: color 0.2s;"
-            onmouseover="this.style.color='var(--text-main)'" 
-            onmouseout="this.style.color='var(--text-muted)'"
-            onmousedown="this.style.color='var(--accent-color)'"
-            >
-        </i>
-        </button>
-    </div>
-    </div>
-
-<script>
-    // Initialize checkboxes from AHK dynamically
-    async function initCheckboxes() {
-        if (!window.ahk) return;
-
-        try {
-            const modulesStr = await ahk.GetModules();
-            const modules = JSON.parse(modulesStr);
-            
-            const resultStr = await ahk.GetToggles();
-            const toggles = JSON.parse(resultStr);
-
-            const readmesStr = await ahk.GetReadmes();
-            const readmes = JSON.parse(readmesStr);
-
-            const container = document.getElementById('modules-container');
-            container.innerHTML = '';
-
-            modules.forEach(mod => {
-                const isChecked = toggles[mod] == 1 || toggles[mod] == true ? 'checked' : '';
-                const hasReadme = readmes[mod] == 1 || readmes[mod] === true;
-                const helpIcon = hasReadme ? `<span class="help-icon" onClick="showReadme('${mod}')">?</span>` : ``;
-
-                container.innerHTML += `
-                    <div class="form-check">
-                        <label class="form-check-label" for="${mod}">${mod}</label>
-                        <div style="display:flex; align-items:center; gap:12px; order:2;">
-                            ${helpIcon}
-                            <input class="form-check-input" type="checkbox" id="${mod}" style="order:unset" ${isChecked} onchange="updateToggle('${mod}', this.checked)">
+    <div class="slab">
+        <div class="slab-inner">
+            <!-- Header -->
+            <div class="header">
+                <div>
+                    <span class="brand">System_Core <small style="color: #6a6a70; margin-left: 8px; font-size: 0.6rem;">v.1.0.0</small></span>
+                    <h1>Script Manager</h1>
+                </div>
+                <div class="win-rheader">
+                    <div class="window-controls">
+                        <div class="win-btn" title="Minimize" onclick="if(window.ahk) ahk.gui.Minimize()">
+                            <div class="icon-min"></div>
                         </div>
+                        <div class="win-btn close" title="Close" onclick="if(window.ahk) ahk.gui.Hide()">
+                            <div class="icon-close"></div>
+                        </div> 
                     </div>
-                `;
+                    <span class="update-link" onclick="alert('Update Check Initialized...');">Update Available!</span>
+                </div>
+            </div>
+
+            <!-- Dynamic Lists -->
+            <div class="script-list" id="sortableList">
+                <!-- Checkboxes & details generated via Javascript below -->
+            </div>
+
+            <!-- Footer -->
+            <div class="footer-controls">
+                <button style="
+                    flex: 1; background: var(--basalt-700); border: 1px solid var(--basalt-600); padding: 12px; color: var(--text-main); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.2s; cursor: pointer;" 
+                    onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent)';" 
+                    onmouseout="this.style.borderColor='var(--basalt-600)'; this.style.color='var(--text-main)';"
+                    onclick="this.innerHTML='SYNCING...'; if(window.ahk) ahk.ReloadScript(); setTimeout(() => this.innerHTML='RELOAD SCRIPTS', 1000)">
+                    RELOAD SCRIPTS
+                </button>
+                <button style="
+                    width: 48px; background: var(--accent); color: var(--basalt-900); padding: 12px; display: flex; align-items: center; justify-content: center; border: none; font-size: 1.2rem; transition: opacity 0.2s; cursor: pointer;" 
+                    onmouseover="this.style.opacity='0.8'" 
+                    onmouseout="this.style.opacity='1'"
+                    onclick="if(window.ahk) { ahk.ShowSettings().catch(e => alert(e)); }">
+                    <i class="bi bi-gear-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Handling -->
+    <script>
+        // Init Checkboxes dynamically via AHK connection
+        async function initCheckboxes() {
+            if (!window.ahk) return;
+
+            try {
+                const modulesStr = await ahk.GetModules();
+                const modules = JSON.parse(modulesStr);
+                
+                const resultStr = await ahk.GetToggles();
+                const toggles = JSON.parse(resultStr);
+
+                const readmesStr = await ahk.GetReadmes();
+                const readmes = JSON.parse(readmesStr);
+
+                const container = document.getElementById('sortableList');
+                container.innerHTML = '';
+
+                modules.forEach((mod, index) => {
+                    const isChecked = toggles[mod] == 1 || toggles[mod] == true ? 'checked' : '';
+                    const hasReadme = readmes[mod] == 1 || readmes[mod] === true;
+                    
+                    // Dummy data for visual effect requested
+                    const dummyPath = `C:\\System\\Scripts\\${mod}.ahk`;
+                    const dummySize = `${(Math.random() * 20 + 2).toFixed(1)}kb`;
+
+                    // Generate Help Icon block conditionally
+                    const helpIconHtml = hasReadme 
+                        ? `
+                        <div class="info-trigger" onclick="showReadme('${mod}')">
+                            ?
+                            <div class="tooltip">VIEW_README</div>
+                        </div>` 
+                        : `<div></div>`; // Empty placeholder grid item
+
+                    // Append exact syntax of original Basalt script-item
+                    container.innerHTML += `
+                        <div class="script-item" style="--i: ${index + 1}">
+                            <div class="handle"></div>
+                            <label class="checkbox-container">
+                                <input type="checkbox" ${isChecked} onchange="updateToggle('${mod}', this.checked)">
+                                <div class="latch"></div>
+                            </label>
+                            <div class="script-info">
+                                <span class="script-name">${mod}.ahk</span>
+                                <span class="script-meta">${dummyPath} // SIZE: ${dummySize}</span>
+                            </div>
+                            ${helpIconHtml}
+                        </div>
+                    `;
+                });
+
+                // Attach Drag/Drop functionality after DOM loads
+                attachDragEvents();
+
+            } catch (e) {
+                console.error("Failed to load toggles", e);
+            }
+        }
+
+        // AHK API functions
+        function showReadme(mod) {
+            if (window.ahk) ahk.ShowReadme(mod);
+        }
+
+        function hideReadme() {
+            if (window.ahk) ahk.HideReadme();
+        }
+
+        function updateToggle(name, value) {
+            if (window.ahk) ahk.UpdateToggle(name, value ? 1 : 0);
+        }
+
+        // Drag & Drop Implementation
+        let dragSrcEl = null;
+
+        function handleDragStart(e) {
+            this.style.opacity = '0.4';
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) { e.preventDefault(); }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) { e.stopPropagation(); }
+            if (dragSrcEl != this) {
+                dragSrcEl.innerHTML = this.innerHTML;
+                this.innerHTML = e.dataTransfer.getData('text/html');
+            }
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+        }
+
+        function attachDragEvents() {
+            let items = document.querySelectorAll('.script-item');
+            items.forEach(function(item) {
+                item.setAttribute('draggable', 'true');
+                item.addEventListener('dragstart', handleDragStart, false);
+                item.addEventListener('dragover', handleDragOver, false);
+                item.addEventListener('drop', handleDrop, false);
+                item.addEventListener('dragend', handleDragEnd, false);
             });
-        } catch (e) {
-            console.error("Failed to load toggles", e);
         }
-    }
 
-    function showReadme(mod) {
-        if (window.ahk) {
-            ahk.ShowReadme(mod);
-        }
-    }
-
-    function hideReadme() {
-        if (window.ahk) {
-            ahk.HideReadme();
-        }
-    }
-
-    // Send toggle state to AHK
-    function updateToggle(name, value) {
-        if (window.ahk) {
-            ahk.UpdateToggle(name, value ? 1 : 0);
-        }
-    }
-
-    // Run on load
-    window.addEventListener('DOMContentLoaded', () => {
-        initCheckboxes();
-    });
-</script>
-
+        // Run Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            initCheckboxes();
+        });
+    </script>
 </body>
 </html>

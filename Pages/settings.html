@@ -4,273 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit mode.ini</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- CodeMirror CSS -->
+    
+    <!-- External Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- CodeMirror Base & Theme -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/darcula.min.css">
-    <style>
-        :root {
-            --bg-dark: #161618;
-            --accent-color: #00ff88;
-            --text-main: #e0e0e0;
-            --text-muted: #888;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Consolas', 'Courier New', monospace;
-            border: 1px solid #333;
-            border-radius: 12px;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-
-        .ahk-titleBar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 44px;
-            padding: 0 12px 0 20px;
-            -webkit-app-region: drag;
-            user-select: none;
-            background: rgba(0,0,0,0.2);
-            border-bottom: 1px solid #222;
-        }
-
-        .window-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .window-title::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--accent-color);
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 8px var(--accent-color);
-        }
-
-        .window-controls {
-            display: flex;
-            gap: 4px;
-            -webkit-app-region: no-drag;
-        }
-
-        .ctrl-btn-save {
-            width: 48px;
-            height: 20px;
-            margin-left: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            color: var(--accent-color);
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            font-family: sans-serif;
-        }
-        .ctrl-btn-save:hover {
-            background-color: var(--accent-color);
-            color: var(--bg-dark);
-        }
-        .ctrl-btn {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            color: var(--text-muted);
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            font-family: sans-serif;
-            font-size: 14px;
-        }
-
-        .ctrl-btn:hover {
-            background: rgba(255,255,255,0.1);
-            color: var(--text-main);
-        }
-
-        .ctrl-btn-close:hover {
-            background: rgba(220, 53, 69, 0.9);
-            color: #fff;
-        }
-
-        .content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background: var(--bg-dark);
-        }
-
-        .CodeMirror {
-            flex: 1;
-            height: auto;
-            background: transparent;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 14px; /* Bumped up slightly for readability */
-            line-height: 1.5;
-        }
-
-        .CodeMirror-gutters {
-            background: transparent;
-            border-right: 1px solid #333;
-        }
-
-        .CodeMirror-vscrollbar, .CodeMirror-hscrollbar {
-            width: 8px;
-        }
-        .CodeMirror-vscrollbar::-webkit-scrollbar, .CodeMirror-hscrollbar::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        .CodeMirror-vscrollbar::-webkit-scrollbar-track, .CodeMirror-hscrollbar::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-        .CodeMirror-vscrollbar::-webkit-scrollbar-thumb, .CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 4px;
-        }
-        .CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover, .CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-color);
-        }
-
-        .CodeMirror-scrollbar-filler {
-            background: transparent !important;
-        }
-
-        /* =========================================================
-           CUSTOM VIBRANT INI SYNTAX HIGHLIGHTING (Fixed!)
-           ========================================================= */
-        .cm-s-darcula .cm-comment    { color: #629755 !important; font-style: italic; } /* Muted Green Comments */
-        .cm-s-darcula .cm-header     { color: #589df6 !important; font-weight: bold; }  /* Bright Blue [Sections] */
-        .cm-s-darcula .cm-keyword    { color: #d0d0d0 !important; }                     /* Crisp White/Grey Keys */
-        .cm-s-darcula .cm-operator   { color: #cc7832 !important; }                     /* Orange Equals Sign '=' */
-        .cm-s-darcula .cm-number     { color: #6897bb !important; }                     /* Light Blue for Numbers */
-        .cm-s-darcula .cm-builtin    { color: #e8bf6a !important; font-weight: bold; }  /* Yellow AHK Modifiers (^!+#) */
-        .cm-s-darcula .cm-string     { color: #a5c261 !important; }                     /* Olive for normal text values */
-        .cm-s-darcula .cm-bool-true  { color: #67c279 !important; font-weight: bold; }  /* Balanced Green (true/yes/on) */
-        .cm-s-darcula .cm-bool-false { color: #d16969 !important; font-weight: bold; }  /* Soft Red (false/no/off) */
-        .cm-s-darcula .cm-atom       { color: #c678dd !important; font-weight: bold; }  /* Purple (null/toggle) */
-    </style>
-</head>
-<body>
-
-    <div class="ahk-titleBar">
-        <div class="window-title">mode.ini
-          <div class="ctrl-btn-save" style="font-size: 0.57rem;" onclick="saveFile(this)">
-            <span style="transform: translateY(1.8px)">SAVE </span>
-          </div>
-        </div>
-        <div class="window-controls">
-            <div class="ctrl-btn" onclick="if(window.ahk) ahk.gui.Minimize()">─</div>
-            <div class="ctrl-btn ctrl-btn-close" onclick="if(window.ahk) ahk.gui.Hide()">✕</div>
-        </div>
-    </div>
-
-    <div class="content">
-        <textarea id="editor" spellcheck="false"></textarea>
-    </div>
-
-    <!-- CodeMirror JS Base -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <!-- CodeMirror Simple Mode Addon -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/simple.min.js"></script>
     
-    <script>
-        // REDESIGNED: Single-State Left-to-Right Parser avoids State Bleeding bugs!
-        CodeMirror.defineSimpleMode("ini-colorful", {
-            start: [
-                // 1. Comments (Using AHK-style semicolons)
-                { regex: /^[ \t]*;.*/, token: "comment" },
-                
-                // 2. Section Headers [Section]
-                { regex: /^[ \t]*\[[^\]]+\]/, token: "header" },
-                
-                // 3. Keys and '=' Sign - Only triggers at the START (^) of a line
-                { regex: /^([ \t]*)([^=]+?)([ \t]*=[ \t]*)/, token: [null, "keyword", "operator"] },
-                
-                // --- EVERYTHING BELOW RUNS ON THE "VALUE" SIDE OF THE LINE ---
-                
-                // 4. Inline comments
-                { regex: /;.*/, token: "comment" },
-                
-                // 5. Strings enclosed in Quotes (e.g., "AUTO")
-                { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
-                { regex: /'(?:[^\\]|\\.)*?(?:'|$)/, token: "string" },
-                
-                // 6. Special keywords (SPLIT FOR SPECIFIC COLORS)
-                { regex: /\b(?:true|yes|on)\b/i, token: "bool-true" },
-                { regex: /\b(?:false|no|off)\b/i, token: "bool-false" },
-                { regex: /\b(?:null|toggle)\b/i, token: "atom" },
-                
-                // 7. Numbers
-                { regex: /[-+]?\d+(?:\.\d+)?/, token: "number" },
-                
-                // 8. AutoHotkey Hotkey Modifiers (^ = Ctrl, ! = Alt, + = Shift, # = Win)
-                { regex: /[\^!+#]+/, token: "builtin" },
-                
-                // 9. Catch-all: Any remaining text becomes standard string
-                { regex: /[^;\s]+/, token: "string" },
-                
-                // 10. Whitespace consumer
-                { regex: /[ \t]+/, token: null }
-            ]
-        });
+    <!-- Link to our unified stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body> 
+<!-- oncontextmenu="return false;" -->
 
-        let saveTimeout;
-        const editorElement = document.getElementById('editor');
-        
-        const cm = CodeMirror.fromTextArea(editorElement, {
-            mode: 'ini-colorful', // Uses the newly rebuilt parser
-            theme: 'darcula',
-            lineNumbers: true,
-            indentUnit: 4,
-            scrollbarStyle: 'native'
-        });
 
-        async function loadFile() {
-            if (window.ahk) {
-                const content = await ahk.GetIniContent();
-                cm.setValue(content);
-            }
-        }
+    <div class="grain"></div>
 
-        function saveFile(btn) {
-            if (window.ahk) {
-                ahk.SaveIniContent(cm.getValue());
-                if (btn) {
-                    const oldHtml = btn.innerHTML;
-                    btn.innerHTML = '<span style="transform: translateY(1.8px)">SAVED</span>';
-                    setTimeout(() => btn.innerHTML = oldHtml, 1000);
-                }
-            }
-        }
+    <div class="slab">
+        <!-- New settings-layout strips padding so editor is flush -->
+        <div class="slab-inner settings-layout">
+            
+            <!-- Header (settings-header-wrap brings back padding just for the top area) -->
+            <div class="header settings-header-wrap">
+                <div style="display: flex;">
+                    <div >
+                        <span class="brand">System_Core <small style="color: #6a6a70; margin-left: 8px; font-size: 0.6rem;">EDITOR</small></span>
+                    </div>
+                        <!-- Save Button -->
+                    <button class="save-btn" id="saveBtn" onclick="saveFile(this)">
+                        <span>SAVE</span>
+                    </button>
+                </div>
+                    <!-- Window Controls -->
+                    <div class="window-controls">
+                        <div class="win-btn" title="Minimize" onclick="if(window.ahk) ahk.gui.Minimize()">
+                            <div class="icon-min"></div>
+                        </div>
+                        <div class="win-btn close" title="Close" onclick="if(window.ahk) ahk.gui.Hide()">
+                            <div class="icon-close"></div>
+                        </div> 
+                </div>
+            </div>
 
-        document.addEventListener('keydown', e => {
-            if (e.ctrlKey && e.key.toLowerCase() === 's') {
-                e.preventDefault();
-                const btn = document.querySelector('.ctrl-btn-save');
-                saveFile(btn);
-            }
-        });
+            <!-- Full Width/Height Code Editor Container -->
+            <div class="editor-container">
+                <textarea id="editor" spellcheck="false"></textarea>
+            </div>
 
-        window.addEventListener('DOMContentLoaded', loadFile);
-    </script>
+            <!-- Footer intentionally removed -->
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/simple.min.js"></script>
+    <script src="settings.js"></script>
 </body>
 </html>
