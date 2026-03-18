@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flash UI - Obsidian Strata</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian-black: #050505;
+            --strata-gray: #121212;
+            --vitreous-glass: rgba(255, 255, 255, 0.03);
+            --edge-light: rgba(255, 255, 255, 0.12);
+            --accent-glow: #00f2ff;
+            --accent-dim: #00666b;
+            --text-primary: #e0e0e0;
+            --text-secondary: #707070;
+            --transition-smooth: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .light-mode {
+            --obsidian-black: #f5f5f7;
+            --strata-gray: #ffffff;
+            --vitreous-glass: rgba(0, 0, 0, 0.03);
+            --edge-light: rgba(0, 0, 0, 0.08);
+            --accent-glow: #0071e3;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: var(--obsidian-black);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* The Vitreous Container */
+        .manager-shell {
+            width: 440px;
+            height: 620px;
+            background: var(--strata-gray);
+            border: 1px solid var(--edge-light);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8), inset 0 1px 1px var(--edge-light);
+            backdrop-filter: blur(40px);
+            overflow: hidden;
+            animation: strataReveal 1.2s ease-out;
+        }
+
+        @keyframes strataReveal {
+            from { transform: translateY(30px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        /* Header Strata */
+        header {
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--edge-light);
+        }
+
+        .brand-zone {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .brand-name {
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+        }
+
+        .version-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .update-notif {
+            color: var(--accent-glow);
+            font-weight: 600;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        /* Profile Switcher Layer */
+        .profile-layer {
+            padding: 0 24px 16px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .profile-dropdown {
+            background: var(--vitreous-glass);
+            border: 1px solid var(--edge-light);
+            padding: 10px 16px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .profile-dropdown:hover {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .profile-dropdown span {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 24px;
+            right: 24px;
+            background: #0f0f0f;
+            border: 1px solid var(--edge-light);
+            border-radius: 12px;
+            margin-top: 8px;
+            display: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        .dropdown-content.show { display: block; }
+
+        .profile-opt {
+            padding: 12px 16px;
+            font-size: 13px;
+            transition: var(--transition-smooth);
+        }
+
+        .profile-opt:hover {
+            background: var(--accent-glow);
+            color: black;
+        }
+
+        /* Script List Strata */
+        .script-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 24px;
+        }
+
+        .script-scroll-area::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .script-scroll-area::-webkit-scrollbar-thumb {
+            background: var(--edge-light);
+            border-radius: 10px;
+        }
+
+        .script-item {
+            background: var(--vitreous-glass);
+            border: 1px solid transparent;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition-smooth);
+            cursor: grab;
+            user-select: none;
+        }
+
+        .script-item:active { cursor: grabbing; }
+
+        .script-item.dragging {
+            opacity: 0.4;
+            scale: 0.98;
+            border-color: var(--accent-glow);
+        }
+
+        .drag-handle {
+            color: var(--text-secondary);
+            opacity: 0.3;
+        }
+
+        .custom-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        .custom-checkbox.checked {
+            background: var(--accent-glow);
+            border-color: var(--accent-glow);
+        }
+
+        .custom-checkbox.checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid var(--obsidian-black);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .script-info {
+            flex: 1;
+        }
+
+        .script-name {
+            font-weight: 600;
+            font-size: 14px;
+            display: block;
+        }
+
+        .script-meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .help-icon {
+            color: var(--text-secondary);
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: var(--text-primary);
+            color: var(--obsidian-black);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition-smooth);
+            font-weight: 700;
+        }
+
+        .help-icon:hover .tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        /* Footer Strata */
+        footer {
+            padding: 24px;
+            border-top: 1px solid var(--edge-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reload-btn {
+            background: var(--text-primary);
+            color: var(--obsidian-black);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .reload-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .mode-toggle {
+            background: var(--vitreous-glass);
+            border: 1px solid var(--edge-light);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .mode-toggle:hover {
+            border-color: var(--accent-glow);
+        }
+
+        /* Icons SVG */
+        svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="manager-shell">
+        <header>
+            <div class="brand-zone">
+                <span class="brand-name">Flash Scripts</span>
+                <div class="version-tag">
+                    v.2.4.0 
+                    <span class="update-notif" id="updateNotif">Update available!</span>
+                </div>
+            </div>
+            <div class="window-controls">
+                <button class="icon-btn" title="Author Profile">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </button>
+                <button class="icon-btn">
+                    <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+                </button>
+                <button class="icon-btn" style="color: #ff4b4b;">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="profile-layer">
+            <div class="profile-dropdown" id="profileToggle">
+                <span>Active Profile: <b>Cyber-Strata-01</b></span>
+                <svg viewBox="0 0 24 24" style="width: 14px;"><path d="M7 10l5 5 5-5z"/></svg>
+            </div>
+            <div class="dropdown-content" id="profileList">
+                <div class="profile-opt">Cyber-Strata-01</div>
+                <div class="profile-opt">Minimal-Ghost-X</div>
+                <div class="profile-opt">Vivid-Obsidian</div>
+            </div>
+        </div>
+
+        <div class="script-scroll-area" id="scriptList">
+            <!-- Script 1 -->
+            <div class="script-item" draggable="true">
+                <div class="drag-handle">
+                    <svg viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+                <div class="custom-checkbox checked"></div>
+                <div class="script-info">
+                    <span class="script-name">Core_Engine_Optimizer</span>
+                    <span class="script-meta">EXEC: RUNTIME_V8 / ID: 992-A</span>
+                </div>
+                <div class="help-icon">
+                    <svg viewBox="0 0 24 24" style="width: 14px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                    <div class="tooltip">Optimizes memory Strata allocation.</div>
+                </div>
+            </div>
+
+            <!-- Script 2 -->
+            <div class="script-item" draggable="true">
+                <div class="drag-handle">
+                    <svg viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+                <div class="custom-checkbox"></div>
+                <div class="script-info">
+                    <span class="script-name">UI_Ghost_Debugger</span>
+                    <span class="script-meta">EXEC: GLSL_RENDER / ID: 004-F</span>
+                </div>
+                <div class="help-icon">
+                    <svg viewBox="0 0 24 24" style="width: 14px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                    <div class="tooltip">Tracks vitreous layer overlaps.</div>
+                </div>
+            </div>
+
+            <!-- Script 3 -->
+            <div class="script-item" draggable="true">
+                <div class="drag-handle">
+                    <svg viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+                <div class="custom-checkbox checked"></div>
+                <div class="script-info">
+                    <span class="script-name">Data_Flow_Bypass</span>
+                    <span class="script-meta">EXEC: ASYNC_WASM / ID: 551-G</span>
+                </div>
+                <div class="help-icon">
+                    <svg viewBox="0 0 24 24" style="width: 14px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                    <div class="tooltip">Bypass cache strata.</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <button class="reload-btn">Reload Scripts</button>
+            <div class="footer-actions">
+                <div class="mode-toggle" id="modeToggle">
+                    <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+                </div>
+                <button class="icon-btn">
+                    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Checkbox Toggle
+        document.querySelectorAll('.custom-checkbox').forEach(cb => {
+            cb.addEventListener('click', () => cb.classList.toggle('checked'));
+        });
+
+        // Theme Toggle
+        const modeToggle = document.getElementById('modeToggle');
+        modeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+        });
+
+        // Profile Dropdown
+        const profileToggle = document.getElementById('profileToggle');
+        const profileList = document.getElementById('profileList');
+        profileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileList.classList.toggle('show');
+        });
+
+        document.addEventListener('click', () => profileList.classList.remove('show'));
+
+        // Drag and Drop Logic
+        const scriptList = document.getElementById('scriptList');
+        let draggingItem = null;
+
+        scriptList.addEventListener('dragstart', (e) => {
+            draggingItem = e.target;
+            e.target.classList.add('dragging');
+        });
+
+        scriptList.addEventListener('dragend', (e) => {
+            e.target.classList.remove('dragging');
+            draggingItem = null;
+        });
+
+        scriptList.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(scriptList, e.clientY);
+            if (afterElement == null) {
+                scriptList.appendChild(draggingItem);
+            } else {
+                scriptList.insertBefore(draggingItem, afterElement);
+            }
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.script-item:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Simulating Update Notification Click
+        document.getElementById('updateNotif').addEventListener('click', function() {
+            this.textContent = "Downloading...";
+            setTimeout(() => {
+                this.textContent = "Applied - Restarting";
+                this.style.color = "#ffffff";
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

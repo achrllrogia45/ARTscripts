@@ -1,4 +1,13 @@
 ; ==============================================================================
+; INCLUDE LIBRARIES DON'T TOUCH BELOW UNLESS YOU KNOW WHAT YOU'RE DOING
+; ==============================================================================
+#Include "lib\UIManager.ahk" ; Load the manager first
+#Include *i "ActiveTheme.ahk" ; Load the theme slot second
+#Include "lib\ConfigManager.ahk"
+#Include "Lib\WebViewToo.ahk"
+#Include "Lib\markdown.ahk"
+
+; ==============================================================================
 /*
   Import modules from here. for cleaner code and easier maintenance.
   The order of these includes determines the order of the modules in the GUI,
@@ -9,22 +18,27 @@
 ; ==============================================================================
 #Include "modules.ahk"
 
+#Requires AutoHotkey v2.0
+
+
+
 ; ==============================================================================
 ; MAIN.AHK (CORE CONTROLLER) - AHK v2
 ; ==============================================================================
-#Requires AutoHotkey v2.0
-#SingleInstance Force
 
-Persistent() ; <--- CRITICAL: Prevents script from closing immediately upon loading
+Persistent()
 
 ; --- Global Variables ---
 global IniFile := A_ScriptDir "\mode.ini"
-
 global SettingsGui := false
 global Toggles := Map()
 global ActiveModules :=[]
 global ManagerGui
 global ReadmeTooltipGui := false
+  
+  
+; --- 3. INITIALIZATION ---
+SyncConfig()
   
 CoordMode("Mouse", "Screen")
 SetWorkingDir(A_ScriptDir)
@@ -47,14 +61,10 @@ if not A_IsAdmin {
   ExitApp()
 }
 
+
 ; ==============================================================================
 ; INITIALIZATION & DYNAMIC HOTKEYS
 ; ==============================================================================
-
-; Sync INI and load ActiveModules (Function from ConfigManager.ahk)
-SyncConfig()
-
-
 
 for i, moduleName in ActiveModules {
   Toggles[moduleName] := Integer(IniRead(IniFile, "Toggles", moduleName, "0"))
@@ -112,11 +122,3 @@ for i, moduleName in ActiveModules {
 }
 
 ShowScriptsManager()
-
-; ==============================================================================
-; INCLUDE LIBRARIES DON'T TOUCH BELOW UNLESS YOU KNOW WHAT YOU'RE DOING
-; ==============================================================================
-#Include "lib\UIManager.ahk"
-#Include "lib\ConfigManager.ahk"
-#Include "Lib\WebViewToo.ahk"
-#Include "Lib\markdown.ahk"

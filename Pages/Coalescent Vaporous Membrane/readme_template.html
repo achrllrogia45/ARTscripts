@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en"> <!-- Class `.dark` is injected by markdown.ahk if needed -->
+<head>
+    <meta charset="UTF-8">
+    <title>Readme Preview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Vapor Glassmorphism Palette */
+            --surface-light: rgba(255, 255, 255, 0.85);
+            --border-light: rgba(0, 0, 0, 0.1);
+            --accent-light: #4f46e5;
+            --text-high-light: #1e293b;
+            --text-mid-light: #64748b;
+            
+            --surface-dark: rgba(15, 23, 42, 0.85);
+            --border-dark: rgba(255, 255, 255, 0.15);
+            --accent-dark: #c7d2fe;
+            --text-high-dark: #f8fafc;
+            --text-mid-dark: #94a3b8;
+        }
+
+        html, body { 
+            font-family: 'Inter', sans-serif; font-size: 14px; 
+            margin: 0; padding: 24px; overflow-y: auto; overflow-x: hidden; 
+            border: none; background: transparent; backdrop-filter: blur(25px);
+        }
+        
+        /* Light Theme */
+        html:not(.dark) body { background-color: var(--surface-light) !important; color: var(--text-high-light) !important; }
+        html:not(.dark) h1, html:not(.dark) h2, html:not(.dark) h3 { color: var(--text-high-light) !important; }
+        html:not(.dark) h1, html:not(.dark) h2 { border-bottom: 1px solid var(--border-light); }
+        html:not(.dark) h3 { color: var(--text-mid-light) !important; }
+        html:not(.dark) code { background-color: rgba(0,0,0,0.05); color: var(--accent-light); border: 1px solid var(--border-light); }
+        html:not(.dark) blockquote { border-left: 4px solid var(--accent-light); background: rgba(0,0,0,0.03); color: var(--text-mid-light); }
+
+        /* Dark Theme */
+        html.dark body { background-color: var(--surface-dark) !important; color: var(--text-high-dark) !important; }
+        html.dark h1, html.dark h2, html.dark h3 { color: var(--text-high-dark) !important; }
+        html.dark h1, html.dark h2 { border-bottom: 1px solid var(--border-dark); }
+        html.dark h3 { color: var(--text-mid-dark) !important; }
+        html.dark code { background-color: rgba(255,255,255,0.05); color: var(--accent-dark); border: 1px solid var(--border-dark); }
+        html.dark blockquote { border-left: 4px solid var(--accent-dark); background: rgba(255,255,255,0.03); color: var(--text-mid-dark); }
+
+        /* Typography & Spacing */
+        h1, h2, h3 { font-weight: 600; letter-spacing: 0.02em; }
+        h1 { font-size: 1.6rem; margin-top: 0; margin-bottom: 20px; padding-bottom: 12px; }
+        h2 { font-size: 1.25rem; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px; }
+        h3 { font-size: 1rem; margin-top: 20px; margin-bottom: 8px; }
+        p, li { line-height: 1.7; margin-top: 0; margin-bottom: 16px; }
+        ul, ol { padding-left: 24px; margin-top: 0; margin-bottom: 16px; }
+        
+        /* Code Blocks */
+        code { padding: 4px 6px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+        pre { border-radius: 12px; margin-bottom: 20px; border: 1px solid; overflow: hidden; }
+        pre code { display: block; padding: 16px; overflow-x: auto; border: none; background: transparent; }
+        html:not(.dark) pre { border-color: var(--border-light); background: rgba(0,0,0,0.03); }
+        html.dark pre { border-color: var(--border-dark); background: rgba(0,0,0,0.2); }
+        
+        blockquote { margin: 0 0 20px 0; padding: 12px 16px; border-radius: 0 12px 12px 0; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        html:not(.dark) ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        html.dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+    <div id="readme-inject">
+        AHK_CONTENT_PLACEHOLDER
+    </div>
+</body>
+</html>

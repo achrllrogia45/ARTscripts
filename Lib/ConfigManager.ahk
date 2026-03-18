@@ -59,7 +59,12 @@ commentSection(TargetFile, Section, CommentText) {
   FileObj.Close()
 }
 ; ==============================================================================
-
+; change profile to another UI Profile
+ProfileSwitcher(val) {
+  global IniFile
+  profileString := IniRead(IniFile, "Setting", "profile", "")
+  IniWrite(profileString, IniFile, "Setting", "profile")
+}
 
 ; ==============================================================================
 ; POPULATE ACTIVE MODULES & KEEP INI CLEAN

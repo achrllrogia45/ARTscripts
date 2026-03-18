@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en"> <!-- Class `.dark` is injected by markdown.ahk if needed -->
+<head>
+    <meta charset="UTF-8">
+    <title>Readme Preview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Markdown Renderer Style Override matching "Monolith Minimalism" */
+        :root {
+            --bg-light: #f5f5f7; --surface-light: #ffffff; --border-light: #e5e5e5;
+            --accent-light: #0070f3; --text-high-light: #000000; --text-mid-light: #666666;
+            
+            --bg-dark: #0a0a0a; --surface-dark: #141414; --border-dark: #262626;
+            --accent-dark: #00ffaa; --text-high-dark: #ffffff; --text-mid-dark: #a3a3a3;
+        }
+
+        html, body { font-family: 'Inter', sans-serif; font-size: 14px; margin: 20px; overflow-y: auto; overflow-x: hidden; border: none; }
+        
+        /* Light Theme (Default) */
+        html:not(.dark) body { background-color: var(--bg-light) !important; color: var(--text-high-light) !important; }
+        html:not(.dark) h1, html:not(.dark) h2, html:not(.dark) h3 { color: var(--text-high-light) !important; }
+        html:not(.dark) h1 { border-bottom: 2px solid var(--border-light); }
+        html:not(.dark) h2 { border-bottom: 1px solid var(--border-light); }
+        html:not(.dark) h3 { color: var(--text-mid-light) !important; }
+        html:not(.dark) code { background-color: var(--surface-light); color: var(--accent-light); border: 1px solid var(--border-light); font-family: 'JetBrains Mono', monospace; }
+        html:not(.dark) blockquote { border-left: 3px solid var(--accent-light); color: var(--text-mid-light); }
+        html:not(.dark) ::-webkit-scrollbar-track { background: var(--bg-light); }
+        html:not(.dark) ::-webkit-scrollbar-thumb { background: var(--border-light); }
+        html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: var(--text-mid-light); }
+
+        /* Dark Theme */
+        html.dark body { background-color: var(--bg-dark) !important; color: var(--text-high-dark) !important; }
+        html.dark h1, html.dark h2, html.dark h3 { color: var(--text-high-dark) !important; }
+        html.dark h1 { border-bottom: 2px solid var(--border-dark); }
+        html.dark h2 { border-bottom: 1px solid var(--border-dark); }
+        html.dark h3 { color: var(--text-mid-dark) !important; }
+        html.dark code { background-color: var(--surface-dark); color: var(--accent-dark); border: 1px solid var(--border-dark); font-family: 'JetBrains Mono', monospace; }
+        html.dark blockquote { border-left: 3px solid var(--accent-dark); color: var(--text-mid-dark); }
+        html.dark ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        html.dark ::-webkit-scrollbar-thumb { background: var(--border-dark); }
+        html.dark ::-webkit-scrollbar-thumb:hover { background: var(--text-mid-dark); }
+
+        /* Formatting */
+        h1, h2, h3 { font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+        h1 { font-size: 1.4rem; margin-top: 0; margin-bottom: 20px; padding-bottom: 12px; }
+        h2 { font-size: 1.1rem; padding-bottom: 6px; margin-top: 24px; margin-bottom: 12px; }
+        h3 { font-size: 0.9rem; margin-top: 20px; margin-bottom: 8px; }
+        p, li { line-height: 1.6; margin-top: 0; margin-bottom: 14px; font-weight: 400; }
+        ul, ol { padding-left: 20px; margin-top: 0; margin-bottom: 14px; }
+        code { padding: 3px 6px; border-radius: 2px; font-size: 12.5px; }
+        pre code { display: block; padding: 12px; overflow-x: auto; background-color: inherit; border: none; }
+        pre { border: 1px solid inherit; margin-bottom: 16px; }
+        html:not(.dark) pre { border-color: var(--border-light); background-color: var(--surface-light); }
+        html.dark pre { border-color: var(--border-dark); background-color: var(--surface-dark); }
+        blockquote { margin: 0 0 16px 0; padding: 4px 16px; background: rgba(0,0,0,0.02); }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+    <div id="readme-inject">
+        AHK_CONTENT_PLACEHOLDER
+    </div>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" class="!bg-transparent dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit mode.ini</title>
+    <!-- Theme FOUC Preventer -->
+    <script>if(localStorage.theme==='light')document.documentElement.classList.remove('dark');else document.documentElement.classList.add('dark');</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#f5f5f7',
+                        surface: '#ffffff',
+                        border: '#e5e5e5',
+                        accent: '#0070f3',
+                        accentDim: 'rgba(0, 112, 243, 0.1)',
+                        textHigh: '#000000',
+                        textMid: '#666666',
+                        textLow: '#a1a1a1',
+                        update: '#d97706',
+                        
+                        'd-bg': '#0a0a0a',
+                        'd-surface': '#141414',
+                        'd-border': '#262626',
+                        'd-accent': '#00ffaa',
+                        'd-accentDim': 'rgba(0, 255, 170, 0.1)',
+                        'd-textHigh': '#ffffff',
+                        'd-textMid': '#a3a3a3',
+                        'd-textLow': '#525252',
+                        'd-update': '#ffb800'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                        jetbrains: ['JetBrains Mono', 'monospace'],
+                    },
+                    backgroundImage: {
+                        'machined': 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%)',
+                        'machined-light': 'linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0) 100%)'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- CodeMirror Base -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <!-- Shared Styles (Overrides CM default appearance to Monolith palette) -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="!bg-transparent text-textHigh dark:text-d-textHigh font-inter flex items-center justify-center w-screen h-screen m-0 overflow-hidden select-none" oncontextmenu="return true;"> 
+    
+    <div class="w-full h-full flex flex-col relative bg-surface dark:bg-d-surface border border-border dark:border-d-border bg-machined-light dark:bg-machined shadow-2xl shadow-black/50">
+        
+        <!-- Header -->
+        <header class="p-6 pb-5 border-b border-border dark:border-d-border flex justify-between items-center shrink-0 [-webkit-app-region:drag]">
+            <div class="flex items-baseline gap-2">
+                <h1 class="font-extrabold text-[14px] tracking-[0.1em] uppercase text-textHigh dark:text-d-textHigh">MACHINA</h1>
+            </div>
+            <div class="flex items-center gap-4 [-webkit-app-region:no-drag]">
+                <!-- Save Button -->
+                <button class="bg-accentDim dark:bg-d-accentDim border border-accent dark:border-d-accent text-accent dark:text-d-accent py-1 px-3 text-[10px] font-jetbrains font-bold cursor-pointer transition-all hover:bg-accent hover:text-surface dark:hover:bg-d-accent dark:hover:text-d-bg mr-2" id="saveBtn" onclick="saveFile(this)">
+                    COMMIT_CHANGES
+                </button>
+
+                <button class="text-textMid dark:text-d-textMid hover:text-textHigh dark:hover:text-d-textHigh transition-all duration-250 cursor-pointer hover:-translate-y-[1px]" title="Minimize" onclick="if(window.ahk) ahk.gui.Minimize()">
+                    <i class="bi bi-dash-lg text-[15px]"></i>
+                </button>
+                <button class="text-textMid dark:text-d-textMid hover:text-textHigh dark:hover:text-d-textHigh transition-all duration-250 cursor-pointer hover:-translate-y-[1px]" title="Close" onclick="if(window.ahk) ahk.gui.Hide()">
+                    <i class="bi bi-x-lg text-[15px]"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Full Width/Height Code Editor Container -->
+        <div class="flex-1 min-h-0 w-full [-webkit-app-region:no-drag] bg-transparent">
+            <textarea id="editor" spellcheck="false"></textarea>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Sync theme with other windows
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                if(e.newValue === 'dark') document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/simple.min.js"></script>
+<script>
+    // Sync theme with other windows
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'theme') {
+            if(e.newValue === 'dark') document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+        }
+    });
+
+    // ADVANCED INI PARSER
+    CodeMirror.defineSimpleMode("ini-colorful", {
+        start: [
+            // Comments
+            { regex: /^[ \t]*;.*/, token: "comment" },
+            // [Main setting inside bracket]
+            { regex: /^[ \t]*\[[^\]]+\]/, token: "header" },
+            // Key = 
+            { regex: /^([ \t]*)([^=]+?)([ \t]*=[ \t]*)/, token: [null, "keyword", "operator"] },
+            // Atoms: null
+            { regex: /\bnull\b/i, token: "atom" },
+            // Booleans: (yes/true)
+            { regex: /\b(true|yes|on)\b/i, token: "bool-true" },
+            // Booleans: (no/false)
+            { regex: /\b(false|no|off)\b/i, token: "bool-false" },
+            // Units: {value}em / {value}px
+            { regex: /[-+]?\d+(?:\.\d+)?(?:px|em|pt|rem|%|vh|vw)\b/i, token: "unit" },
+            // Plain Numbers
+            { regex: /[-+]?\d+(?:\.\d+)?/, token: "number" },
+            // Quoted Strings
+            { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
+            { regex: /'(?:[^\\]|\\.)*?(?:'|$)/, token: "string" },
+            // Inline comments
+            { regex: /;.*/, token: "comment" },
+            // Everything else
+            { regex: /[^;\s]+/, token: "string" }
+        ]
+    });
+
+    const editorElement = document.getElementById('editor');
+    const cm = CodeMirror.fromTextArea(editorElement, {
+        mode: 'ini-colorful',
+        lineNumbers: true,
+        indentUnit: 4,
+        scrollbarStyle: 'native',
+        lineWrapping: true
+    });
+    
+    // Logic for interacting with AHK
+    async function loadFile() {
+        if (window.ahk) {
+            try {
+                const content = await ahk.GetIniContent();
+                cm.setValue(content);
+                setTimeout(() => cm.refresh(), 50);
+            } catch (e) { console.error("Failed to load INI:", e); }
+        } else {
+            // Mock content for testing browser view
+            cm.setValue("[GENERAL]\nTheme = dark\nTransparency = 0.9\n\n[INTERFACE]\nPadding = 12px\nFontSize = 1.2em\nDebugMode = false\nAutoSync = yes\nPluginPath = null\n; End of Config");
+        }
+    }
+
+    function saveFile(btn) {
+        if (window.ahk) {
+            ahk.SaveIniContent(cm.getValue());
+            if (btn) {
+                const oldHtml = btn.innerHTML;
+                const isDark = document.documentElement.classList.contains('dark');
+                btn.innerHTML = 'CHANGES_COMMITTED';
+                // Inline override for visual feedback
+                btn.classList.add('!bg-white', '!text-black', 'dark:!bg-d-accent', 'dark:!text-d-bg');
+                
+                setTimeout(() => {
+                    btn.innerHTML = oldHtml;
+                    btn.classList.remove('!bg-white', '!text-black', 'dark:!bg-d-accent', 'dark:!text-d-bg');
+                }, 1200);
+            }
+        }
+    }
+
+    // Ctrl+S Support
+    document.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            saveFile(document.getElementById('saveBtn'));
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', loadFile);
+</script>
+</body>
+</html>

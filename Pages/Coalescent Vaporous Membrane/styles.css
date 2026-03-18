@@ -1,0 +1,118 @@
+/* 
+  Global CSS for Vapor Scripts (Glassmorphism Aesthetic)
+  Handles complex gradients, custom scrollbars, and High-Contrast CodeMirror Syntax 
+*/
+
+/* 1. Global Background Gradients */
+.vapor-bg {
+    background: #020617; /* Dark Mode Fallback */
+    background-image: 
+        radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.1) 0%, transparent 40%);
+}
+
+html:not(.dark) .vapor-bg {
+    background: #f1f5f9; /* Light Mode Fallback */
+    background-image: 
+        radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.08) 0%, transparent 40%);
+}
+
+/* Animations */
+@keyframes appEntry {
+    from { opacity: 0; transform: scale(0.95) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-appEntry { animation: appEntry 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+
+@keyframes vaporPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+.animate-vaporPulse { animation: vaporPulse 2s infinite ease-in-out; }
+
+/* Custom Glassmorphism Scrollbar */
+.script-container::-webkit-scrollbar, 
+.CodeMirror-vscrollbar::-webkit-scrollbar, 
+.CodeMirror-hscrollbar::-webkit-scrollbar { 
+    width: 6px; height: 6px; 
+}
+.script-container::-webkit-scrollbar-track, 
+.CodeMirror-vscrollbar::-webkit-scrollbar-track, 
+.CodeMirror-hscrollbar::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+
+/* Light scrollbar */
+html:not(.dark) .script-container::-webkit-scrollbar-thumb,
+html:not(.dark) .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+html:not(.dark) .CodeMirror-hscrollbar::-webkit-scrollbar-thumb { 
+    background: rgba(0,0,0,0.15); border-radius: 10px; 
+}
+html:not(.dark) .script-container::-webkit-scrollbar-thumb:hover,
+html:not(.dark) .CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover,
+html:not(.dark) .CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover { 
+    background: rgba(0,0,0,0.3); 
+}
+
+/* Dark scrollbar */
+html.dark .script-container::-webkit-scrollbar-thumb,
+html.dark .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+html.dark .CodeMirror-hscrollbar::-webkit-scrollbar-thumb { 
+    background: rgba(255,255,255,0.15); border-radius: 10px; 
+}
+html.dark .script-container::-webkit-scrollbar-thumb:hover,
+html.dark .CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover,
+html.dark .CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover { 
+    background: rgba(255,255,255,0.3); 
+}
+
+/* ===========================
+   CODEMIRROR HIGH-CONTRAST VAPOR THEME
+   =========================== */
+
+.CodeMirror { 
+    height: 100% !important; width: 100% !important; 
+    background: transparent !important; 
+    font-family: 'JetBrains Mono', monospace !important; 
+    font-size: 13px; line-height: 1.6;
+}
+
+.CodeMirror-gutters { background: transparent !important; border-right: 1px solid transparent !important; }
+.CodeMirror-scrollbar-filler { background: transparent; }
+
+/* Light Theme Syntax (Saturated for contrast against bright glass) */
+html:not(.dark) .CodeMirror { color: #0f172a !important; }
+html:not(.dark) .CodeMirror-gutters { border-color: rgba(0,0,0,0.1) !important; }
+html:not(.dark) .CodeMirror-linenumber { color: #94a3b8 !important; padding-right: 12px !important; }
+html:not(.dark) .CodeMirror-cursor { border-left: 2px solid #4f46e5 !important; }
+html:not(.dark) .CodeMirror-selected { background: rgba(79, 70, 229, 0.15) !important; }
+
+html:not(.dark) .cm-comment { color: #64748b !important; font-style: italic; }
+html:not(.dark) .cm-header { color: #4338ca !important; font-weight: 700; } /* Indigo 700 */
+html:not(.dark) .cm-keyword { color: #0f172a !important; font-weight: 600; }
+html:not(.dark) .cm-operator { color: #475569 !important; }
+html:not(.dark) .cm-atom { color: #a21caf !important; font-weight: 700; } /* Fuchsia 700 for Null */
+html:not(.dark) .cm-bool-true { color: #15803d !important; font-weight: 700; } /* Green 700 for True */
+html:not(.dark) .cm-bool-false { color: #b91c1c !important; font-weight: 700; } /* Red 700 for False */
+html:not(.dark) .cm-unit { color: #c2410c !important; font-weight: 700; } /* Orange 700 for px/em */
+html:not(.dark) .cm-number { color: #b45309 !important; } /* Amber 700 */
+html:not(.dark) .cm-string { color: #0369a1 !important; } /* Sky 700 */
+
+/* Dark Theme Syntax (Neon/Pastel for contrast against dark glass) */
+html.dark .CodeMirror { color: #f8fafc !important; }
+html.dark .CodeMirror-gutters { border-color: rgba(255,255,255,0.1) !important; }
+html.dark .CodeMirror-linenumber { color: #64748b !important; padding-right: 12px !important; }
+html.dark .CodeMirror-cursor { border-left: 2px solid #818cf8 !important; }
+html.dark .CodeMirror-selected { background: rgba(129, 140, 248, 0.25) !important; }
+
+html.dark .cm-comment { color: #94a3b8 !important; font-style: italic; }
+html.dark .cm-header { color: #818cf8 !important; font-weight: 700; } /* Indigo 400 */
+html.dark .cm-keyword { color: #e2e8f0 !important; font-weight: 600; }
+html.dark .cm-operator { color: #cbd5e1 !important; }
+html.dark .cm-atom { color: #e879f9 !important; font-weight: 700; } /* Fuchsia 400 for Null */
+html.dark .cm-bool-true { color: #4ade80 !important; font-weight: 700; } /* Green 400 for True */
+html.dark .cm-bool-false { color: #fb7185 !important; font-weight: 700; } /* Rose 400 for False */
+html.dark .cm-unit { color: #fb923c !important; font-weight: 700; } /* Orange 400 for px/em */
+html.dark .cm-number { color: #fcd34d !important; } /* Amber 300 */
+html.dark .cm-string { color: #38bdf8 !important; } /* Sky 400 */

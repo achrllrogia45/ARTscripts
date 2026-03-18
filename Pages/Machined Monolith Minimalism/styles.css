@@ -1,0 +1,109 @@
+/* 
+  Global CSS for MACHINA Monolith Minimalism
+  Handles complex states, custom scrollbars, and advanced Syntax Highlighting
+*/
+
+:root {
+    --bg-light: #f5f5f7;
+    --surface-light: #ffffff;
+    --border-light: #e5e5e5;
+    --accent-light: #0070f3;
+    --text-high-light: #000000;
+    --text-mid-light: #666666;
+    --text-low-light: #a1a1a1;
+    --update-light: #d97706;
+    --error-light: #e53935;
+
+    --bg-dark: #0a0a0a;
+    --surface-dark: #141414;
+    --border-dark: #262626;
+    --accent-dark: #00ffaa;
+    --text-high-dark: #ffffff;
+    --text-mid-dark: #a3a3a3;
+    --text-low-dark: #525252;
+    --update-dark: #ffb800;
+    --error-dark: #ff4444;
+}
+
+html {
+    --bg: var(--bg-light);
+    --surface: var(--surface-light);
+    --border: var(--border-light);
+    --accent: var(--accent-light);
+    --text-high: var(--text-high-light);
+    --text-mid: var(--text-mid-light);
+    --text-low: var(--text-low-light);
+    --update: var(--update-light);
+    --error: var(--error-light);
+}
+
+html.dark {
+    --bg: var(--bg-dark);
+    --surface: var(--surface-dark);
+    --border: var(--border-dark);
+    --accent: var(--accent-dark);
+    --text-high: var(--text-high-dark);
+    --text-mid: var(--text-mid-dark);
+    --text-low: var(--text-low-dark);
+    --update: var(--update-dark);
+    --error: var(--error-dark);
+}
+
+/* Breathe Animation */
+@keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.animate-breathe { animation: breathe 2s infinite ease-in-out; }
+
+/* Tooltip */
+.help-icon { color: var(--text-low); cursor: help; position: relative; display: inline-flex; align-items: center; }
+.help-icon:hover::after {
+    content: attr(data-tooltip);
+    position: absolute; left: 20px; top: -5px;
+    background: var(--text-high); color: var(--bg);
+    padding: 4px 8px; font-size: 10px; font-weight: 600;
+    white-space: nowrap; z-index: 20; border-radius: 2px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-mid); }
+
+/* ===========================
+   CODEMIRROR CUSTOM THEME
+   =========================== */
+.CodeMirror { 
+    height: 100% !important; width: 100% !important; 
+    background: transparent !important; 
+    font-family: 'JetBrains Mono', monospace !important; 
+    font-size: 12px; color: var(--text-high) !important; 
+}
+.CodeMirror-gutters { background: rgba(0,0,0,0.02) !important; border-right: 1px solid var(--border) !important; }
+html.dark .CodeMirror-gutters { background: rgba(0,0,0,0.2) !important; }
+.CodeMirror-linenumber { color: var(--text-low) !important; padding-right: 8px !important; }
+.CodeMirror-cursor { border-left: 2px solid var(--accent) !important; }
+.CodeMirror-selected { background: color-mix(in srgb, var(--accent) 20%, transparent) !important; }
+
+/* --- LIGHT SYNTAX --- */
+html:not(.dark) .cm-comment { color: #999 !important; font-style: italic; }
+html:not(.dark) .cm-header { color: var(--accent-light) !important; font-weight: 800; }
+html:not(.dark) .cm-keyword { color: #333 !important; font-weight: 600; }
+html:not(.dark) .cm-operator { color: #999 !important; }
+html:not(.dark) .cm-atom { color: #7b1fa2 !important; font-weight: bold; } /* null */
+html:not(.dark) .cm-bool-true { color: #2e7d32 !important; font-weight: bold; } /* true/yes */
+html:not(.dark) .cm-bool-false { color: #c62828 !important; font-weight: bold; } /* false/no */
+html:not(.dark) .cm-unit { color: #d97706 !important; font-weight: 600; } /* px/em */
+html:not(.dark) .cm-number { color: #d97706 !important; }
+html:not(.dark) .cm-string { color: #444 !important; }
+
+/* --- DARK SYNTAX --- */
+html.dark .cm-comment { color: #555 !important; font-style: italic; }
+html.dark .cm-header { color: var(--accent-dark) !important; font-weight: 800; }
+html.dark .cm-keyword { color: #eee !important; font-weight: 600; }
+html.dark .cm-operator { color: #666 !important; }
+html.dark .cm-atom { color: #bd93f9 !important; font-weight: bold; } /* null */
+html.dark .cm-bool-true { color: #50fa7b !important; font-weight: bold; } /* true/yes */
+html.dark .cm-bool-false { color: #ff5555 !important; font-weight: bold; } /* false/no */
+html.dark .cm-unit { color: #ffb800 !important; font-weight: 600; } /* px/em */
+html.dark .cm-number { color: #ffb800 !important; }
+html.dark .cm-string { color: #ccc !important; }

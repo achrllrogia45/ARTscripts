@@ -3,6 +3,13 @@
 ; Handles all WebView2 GUI logic, Tooltips, and JS-to-AHK Callbacks.
 ; ==============================================================================
 
+; THEME TOGGLE LISTENER (Handle Read and Write Theme)
+OnToggle_Theme(val) {
+  global IniFile
+  modeString := (val == 1) ? "dark" : "light"
+  IniWrite(modeString, IniFile, "Setting", "mode")
+}
+
 ShowScriptsManager(*) {
   global ManagerGui
 
@@ -37,6 +44,7 @@ ShowScriptsManager(*) {
   ManagerGui.AddCallbackToScript("ShowReadme", WebShowReadme)
   ManagerGui.AddCallbackToScript("HideReadme", WebHideReadme)
   ManagerGui.AddCallbackToScript("UpdateToggle", WebUpdateToggle)
+  ManagerGui.AddCallbackToScript("UpdateModuleOrder", WebUpdateModuleOrder)
   ManagerGui.AddCallbackToScript("ReloadScript", WebReloadScript)
   ManagerGui.AddCallbackToScript("ShowSettings", WebShowSettings)
 
@@ -178,12 +186,23 @@ WebReloadScript(WebView) {
 
 WebGetModules(WebView) {
   global ActiveModules
-  arrStr := "["
+  jsonStr := "["
   for i, moduleName in ActiveModules {
-    arrStr .= '"' moduleName '"' (i < ActiveModules.Length ? "," : "")
+    filePath := A_ScriptDir "\Modules\" moduleName ".ahk"
+    filePathForJson := StrReplace(filePath, "\", "\\")
+    fileSize := "N/A"
+    if FileExist(filePath) {
+      sizeBytes := FileGetSize(filePath)
+      fileSize := Round(sizeBytes / 1024, 1) . "kb"
+    }
+
+    jsonStr .= '{"name": "' moduleName '", "path": "' filePathForJson '", "size": "' fileSize '"}'
+    if (i < ActiveModules.Length) {
+      jsonStr .= ","
+    }
   }
-  arrStr .= "]"
-  return arrStr
+  jsonStr .= "]"
+  return jsonStr
 }
 
 WebGetToggles(WebView) {
@@ -213,59 +232,119 @@ WebGetReadmes(WebView) {
   return jsonStr
 }
 
-#HotIf IsSet(ReadmeTooltipGui) && ReadmeTooltipGui
+; ==============================================================================
+; README POPUP WINDOW LOGIC
+; ==============================================================================
+
+; Accurately verify if the popup window is physically rendered on screen
+IsReadmeVisible() {
+  global ReadmeTooltipGui
+  if IsSet(ReadmeTooltipGui) && ReadmeTooltipGui {
+    return DllCall("IsWindowVisible", "Ptr", ReadmeTooltipGui.Hwnd)
+  }
+  return false
+}
+
+#HotIf IsReadmeVisible()
 ~LButton:: {
   global ReadmeTooltipGui
   try {
-    MouseGetPos(, , &hoverWin)
-    if (hoverWin != ReadmeTooltipGui.Hwnd) {
+    CoordMode("Mouse", "Screen")
+    MouseGetPos(&mX, &mY)
+    WinGetPos(&winX, &winY, &winW, &winH, "ahk_id " ReadmeTooltipGui.Hwnd)
+
+    ; If click is outside the physical bounds of the WebView popup window
+    if (mX < winX || mX > (winX + winW) || mY < winY || mY > (winY + winH)) {
       WebHideReadme()
     }
   }
 }
 #HotIf
 
+global PendingReadmeMod := ""
+global ReadmeDispX := 0
+global ReadmeDispY := 0
+
+; Triggered by Javascript, MUST use SetTimer to prevent WebView2 thread deadlocking
 WebShowReadme(WebView, mod) {
-  global ReadmeTooltipGui
-  filePath := A_ScriptDir "\Modules\" mod ".ahk"
-  if !FileExist(filePath)
+  global PendingReadmeMod, ReadmeDispX, ReadmeDispY
+  PendingReadmeMod := mod
+
+  CoordMode("Mouse", "Screen")
+  MouseGetPos(&mX, &mY)
+
+  ; Offset the popup slightly away from the mouse cursor
+  ReadmeDispX := mX + 20
+  ReadmeDispY := mY + 20
+
+  ; Escapes the WebView callback thread
+  SetTimer(LaunchReadmeGui, -1)
+}
+
+LaunchReadmeGui() {
+  global PendingReadmeMod, ReadmeDispX, ReadmeDispY, ReadmeTooltipGui, ManagerGui
+  mod := PendingReadmeMod
+
+  if (!mod || !FileExist(filePath := A_ScriptDir "\Modules\" mod ".ahk"))
     return
 
+  ; 1. AHK only extracts the Raw Text
   content := FileRead(filePath)
   if !RegExMatch(content, "(?si)/\*\s*\[readme\](.*?)\*/", &match)
     return
 
-  cleanText := Trim(match[1], "`r`n ")
-  html := ParseMarkdownToHTML(cleanText)
-
-  if IsSet(ReadmeTooltipGui) && ReadmeTooltipGui {
-    try ReadmeTooltipGui.Destroy()
-    ReadmeTooltipGui := false
+  ; Convert Markdown to HTML (AHK handles the logic, but not the 'look')
+  try {
+    htmlContent := ParseMarkdownToHTML(Trim(match[1], "`r`n "))
+  } catch {
+    htmlContent := "<pre>" Trim(match[1], "`r`n ") "</pre>"
   }
 
-  ReadmeTooltipGui := Gui("+AlwaysOnTop -Caption +ToolWindow +Border", mod " - Readme")
-  ReadmeTooltipGui.BackColor := "1e1e1e"
-  ReadmeTooltipGui.MarginX := 0
-  ReadmeTooltipGui.MarginY := 0
+  ; 2. Load the Template file
+  TemplatePath := A_ScriptDir "\Pages\readme_template.html"
+  if !FileExist(TemplatePath) {
+    MsgBox("Error: Missing Pages/readme_template.html")
+    return
+  }
 
-  wb := ReadmeTooltipGui.Add("ActiveX", "w400 h300", "Shell.Explorer").Value
-  wb.Navigate("about:blank")
-  while wb.readyState != 4
-    Sleep 10
-  wb.document.write(html)
-  wb.document.close()
+  ; 3. Swap the placeholder for the content
+  FullHtml := StrReplace(FileRead(TemplatePath), "AHK_CONTENT_PLACEHOLDER", htmlContent)
 
-  MouseGetPos(&mX, &mY)
-  dispX := mX + 25
-  dispY := mY + 25
-  ReadmeTooltipGui.Show("NoActivate x" dispX " y" dispY " w400 h300")
+  ; 4. Create the temporary page file
+  TempFile := A_Temp "\WebView_Readme_" mod ".html"
+  FileOpen(TempFile, "w", "UTF-8").Write(FullHtml)
+
+  ; Window Positioning logic
+  dispX := ReadmeDispX, dispY := ReadmeDispY
+  if (dispX + 400 > A_ScreenWidth)
+    dispX := A_ScreenWidth - 420
+  if (dispY + 350 > A_ScreenHeight)
+    dispY := A_ScreenHeight - 370
+
+  SafeUrl := "file:///" StrReplace(TempFile, "\", "/")
+
+  if (!IsSet(ReadmeTooltipGui) || !ReadmeTooltipGui) {
+    WebViewSettings := { Url: SafeUrl }
+    if (A_IsCompiled)
+      WebViewSettings.DllPath := WebViewCtrl.TempDir "\" (A_PtrSize * 8) "bit\WebView2Loader.dll"
+
+    ownerStr := (IsSet(ManagerGui) && ManagerGui) ? " +Owner" ManagerGui.Hwnd : ""
+    ReadmeTooltipGui := WebViewGui.Call("+AlwaysOnTop -Caption -Border +ToolWindow" ownerStr, mod " - Readme", ,
+      WebViewSettings)
+    ReadmeTooltipGui.OnEvent("Close", (*) => ReadmeTooltipGui.Hide())
+    ReadmeTooltipGui.Show("NoActivate x" dispX " y" dispY " w400 h350")
+  } else {
+    try ReadmeTooltipGui.Title := mod " - Readme"
+    ReadmeTooltipGui.Navigate(SafeUrl)
+    ReadmeTooltipGui.Show("NoActivate x" dispX " y" dispY " w400 h350")
+  }
 }
 
 WebHideReadme(WebView := unset) {
   global ReadmeTooltipGui
   if IsSet(ReadmeTooltipGui) && ReadmeTooltipGui {
-    try ReadmeTooltipGui.Destroy()
-    ReadmeTooltipGui := false
+    ; Use Hide instead of Destroy so the WebView2 instance persists for fast successive clicks
+    try ReadmeTooltipGui.Hide()
   }
 }
 
@@ -277,6 +356,31 @@ WebUpdateToggle(WebView, name, value) {
   fn := "OnToggle_" name
   if IsSet(%fn%) && Type(%fn%) == "Func"
     %fn%(Toggles[name])
+}
+
+WebUpdateModuleOrder(WebView, newOrderJson) {
+  global IniFile, ActiveModules
+
+  newOrder := StrSplit(Trim(newOrderJson, "[]"), ",", "")
+
+  sortedToggles := ""
+  for index, moduleName in newOrder {
+    currentModuleName := Trim(moduleName, " `t`"")
+    if (currentModuleName = "")
+      continue
+    currentToggle := IniRead(IniFile, "Toggles", currentModuleName, "0")
+    sortedToggles .= currentModuleName "=" currentToggle "`n"
+  }
+
+  if (sortedToggles != "") {
+    IniWrite(RTrim(sortedToggles, "`n"), IniFile, "Toggles")
+  }
+
+  newActiveModules := []
+  for _, moduleName in newOrder {
+    newActiveModules.Push(Trim(moduleName, " `t`""))
+  }
+  ActiveModules := newActiveModules
 }
 
 UpdateWebViewToggleUI() {

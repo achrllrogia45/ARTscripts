@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" class="!bg-transparent dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MACHINA Script Manager</title>
+    <!-- Theme FOUC Preventer -->
+    <script>if(localStorage.theme==='light')document.documentElement.classList.remove('dark');else document.documentElement.classList.add('dark');</script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#f5f5f7',
+                        surface: '#ffffff',
+                        border: '#e5e5e5',
+                        accent: '#0070f3',
+                        accentDim: 'rgba(0, 112, 243, 0.1)',
+                        textHigh: '#000000',
+                        textMid: '#666666',
+                        textLow: '#a1a1a1',
+                        update: '#d97706',
+                        
+                        'd-bg': '#0a0a0a',
+                        'd-surface': '#141414',
+                        'd-border': '#262626',
+                        'd-accent': '#00ffaa',
+                        'd-accentDim': 'rgba(0, 255, 170, 0.1)',
+                        'd-textHigh': '#ffffff',
+                        'd-textMid': '#a3a3a3',
+                        'd-textLow': '#525252',
+                        'd-update': '#ffb800'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                        jetbrains: ['JetBrains Mono', 'monospace'],
+                    },
+                    backgroundImage: {
+                        'machined': 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%)',
+                        'machined-light': 'linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0) 100%)'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Bootstrap Icons & Google Fonts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Shared Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="!bg-transparent text-textHigh dark:text-d-textHigh font-inter flex items-center justify-center w-screen h-screen m-0 overflow-hidden select-none" oncontextmenu="return true;">
+    
+    <div class="w-full h-full flex flex-col relative bg-surface dark:bg-d-surface border border-border dark:border-d-border bg-machined-light dark:bg-machined shadow-2xl shadow-black/50">
+        
+        <!-- Header -->
+        <header class="p-6 border-b border-border dark:border-d-border flex flex-col gap-3 shrink-0 [-webkit-app-region:drag]">
+            <div class="flex justify-between items-center">
+                <div class="flex items-baseline gap-2">
+                    <h1 class="font-extrabold text-[14px] tracking-[0.1em] uppercase text-textHigh dark:text-d-textHigh">MACHINA</h1>
+                    <span class="font-jetbrains text-[10px] text-textLow dark:text-d-textLow">v2.4.0-STABLE</span>
+                </div>
+                <div class="flex gap-4 [-webkit-app-region:no-drag]">
+                    <button class="text-textMid dark:text-d-textMid hover:text-textHigh dark:hover:text-d-textHigh transition-all duration-250 cursor-pointer hover:-translate-y-[1px]" title="Author Profile" onclick="window.open('https://github.com/achrllrogia45', '_blank')">
+                        <i class="bi bi-github text-[15px]"></i>
+                    </button>
+                    <button class="text-textMid dark:text-d-textMid hover:text-textHigh dark:hover:text-d-textHigh transition-all duration-250 cursor-pointer hover:-translate-y-[1px]" title="Minimize" onclick="if(window.ahk) ahk.gui.Minimize()">
+                        <i class="bi bi-dash-lg text-[15px]"></i>
+                    </button>
+                    <button class="text-textMid dark:text-d-textMid hover:text-textHigh dark:hover:text-d-textHigh transition-all duration-250 cursor-pointer hover:-translate-y-[1px]" title="Close" onclick="if(window.ahk) ahk.gui.Hide()">
+                        <i class="bi bi-x-lg text-[15px]"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="text-[10px] font-semibold text-update dark:text-d-update flex items-center gap-1.5 animate-breathe cursor-pointer [-webkit-app-region:no-drag] w-fit" onclick="alert('Update Check Initialized...');">
+                <i class="bi bi-circle-fill text-[8px]"></i>
+                UPDATE AVAILABLE! (V2.4.1)
+            </div>
+        </header>
+
+        <!-- Profile / Tools Bar -->
+        <div class="px-6 py-3 bg-black/5 dark:bg-black/10 border-b border-border dark:border-d-border flex justify-between items-center shrink-0 [-webkit-app-region:no-drag]">
+            <div class="relative group" id="profileDropdown">
+                <button class="bg-transparent border-none text-textMid dark:text-d-textMid font-jetbrains text-[11px] cursor-pointer flex items-center gap-2 hover:text-textHigh dark:hover:text-d-textHigh transition-colors" onclick="document.getElementById('profileDropdown').classList.toggle('active')">
+                    <i class="bi bi-chevron-down text-[10px]"></i>
+                    PROFILE: PRODUCTION_CORE
+                </button>
+                <div class="absolute top-[calc(100%+8px)] left-0 bg-surface dark:bg-d-surface border border-border dark:border-d-border w-[180px] z-10 hidden group-[.active]:block shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+                    <div class="p-2.5 px-4 text-[11px] font-jetbrains cursor-pointer transition-all hover:bg-accentDim dark:hover:bg-d-accentDim hover:text-accent dark:hover:text-d-accent">PRODUCTION_CORE</div>
+                    <div class="p-2.5 px-4 text-[11px] font-jetbrains cursor-pointer transition-all hover:bg-accentDim dark:hover:bg-d-accentDim hover:text-accent dark:hover:text-d-accent text-textLow dark:text-d-textLow">DEBUG_SANDBOX</div>
+                    <div class="p-2.5 px-4 text-[11px] font-jetbrains cursor-pointer transition-all hover:bg-accentDim dark:hover:bg-d-accentDim hover:text-accent dark:hover:text-d-accent text-textLow dark:text-d-textLow">LEGACY_STRICT</div>
+                </div>
+            </div>
+            <button class="bg-transparent border-none text-textLow dark:text-d-textLow text-[14px] cursor-pointer transition-colors hover:text-accent dark:hover:text-d-accent" id="theme-toggle-button">
+                <i id="theme-toggle-icon" class="bi bi-moon-stars"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Lists -->
+        <div class="flex-1 overflow-y-auto py-2 script-list [-webkit-app-region:no-drag]" id="sortableList"></div>
+
+        <!-- Footer -->
+        <footer class="p-4 px-6 border-t border-border dark:border-d-border flex justify-between items-center shrink-0 [-webkit-app-region:no-drag]">
+            <div class="flex gap-5">
+                <button class="bg-transparent border border-border dark:border-d-border text-textMid dark:text-d-textMid py-1.5 px-4 text-[11px] font-jetbrains cursor-pointer transition-all hover:border-textMid dark:hover:border-d-textMid hover:text-textHigh dark:hover:text-d-textHigh" 
+                    onclick="this.innerHTML='SYNCING...'; if(window.ahk) ahk.ReloadScript(); setTimeout(() => this.innerHTML='RELOAD_SCRIPTS', 1000)">
+                    RELOAD_SCRIPTS
+                </button>
+            </div>
+            <button class="bg-transparent border-none text-textMid dark:text-d-textMid hover:text-textHigh dark:hover:text-d-textHigh cursor-pointer transition-all hover:-translate-y-[1px]" title="Settings" 
+                onclick="if(window.ahk) { ahk.ShowSettings().catch(e => alert(e)); }">
+                <i class="bi bi-sliders text-[16px]"></i>
+            </button>
+        </footer>
+
+    </div>
+
+    <script>
+        // --- THEME SWITCHER LOGIC ---
+        const themeToggleButton = document.getElementById('theme-toggle-button');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                if(themeToggleIcon) themeToggleIcon.className = 'bi bi-moon-stars text-[14px]';
+            } else {
+                document.documentElement.classList.remove('dark');
+                if(themeToggleIcon) themeToggleIcon.className = 'bi bi-brightness-high text-[14px]';
+            }
+        }
+        
+        applyTheme(localStorage.getItem('theme') || 'dark');
+
+        themeToggleButton.addEventListener('click', () => {
+            const isCurrentlyDark = document.documentElement.classList.contains('dark');
+            const newTheme = isCurrentlyDark ? 'light' : 'dark';
+            
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+            
+            if (window.ahk) ahk.UpdateToggle("Theme", (newTheme === 'dark') ? 1 : 0);
+        });
+        
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') applyTheme(e.newValue);
+        });
+
+        // --- DROPDOWN CLOSER ---
+        window.onclick = function(event) {
+            if (!event.target.closest('#profileDropdown')) {
+                document.getElementById('profileDropdown').classList.remove('active');
+            }
+        }
+    </script>
+    <script type="module">
+        async function initCheckboxes() {
+            if (!window.ahk) return;
+            try {
+                const modulesStr = await ahk.GetModules();
+                const modules = JSON.parse(modulesStr);
+                const resultStr = await ahk.GetToggles();
+                const toggles = JSON.parse(resultStr);
+                const readmesStr = await ahk.GetReadmes();
+                const readmes = JSON.parse(readmesStr);
+                const container = document.getElementById('sortableList');
+                container.innerHTML = '';
+
+                modules.forEach((mod) => {
+                    const isChecked = (toggles[mod.name] == 1 || toggles[mod.name] == true) ? 'checked' : '';
+                    const hasReadme = (readmes[mod.name] == 1 || readmes[mod.name] === true);
+                    
+                    const helpIconHtml = hasReadme 
+                        ? `<span class="help-icon ml-2" data-tooltip="View Documentation" onclick="showReadme('${mod.name}')">
+                                <i class="bi bi-info-circle text-[12px]"></i>
+                           </span>` 
+                        : ``;
+
+                    container.innerHTML += `
+                        <div class="px-6 py-3 flex items-center gap-4 border-b border-transparent hover:border-border dark:hover:border-d-border hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-grab script-item" data-module-name="${mod.name}">
+                            <div class="text-textLow dark:text-d-textLow cursor-grab shrink-0">
+                                <i class="bi bi-grip-vertical"></i>
+                            </div>
+                            <div class="flex-1 flex flex-col min-w-0">
+                                <div class="text-[13px] font-medium flex items-center text-textHigh dark:text-d-textHigh">
+                                    <span class="truncate">${mod.name}.ahk</span>
+                                    ${helpIconHtml}
+                                </div>
+                                <span class="font-jetbrains text-[10px] text-textLow dark:text-d-textLow mt-0.5 truncate">${mod.path} // ${mod.size}</span>
+                            </div>
+                            <label class="relative flex items-center cursor-pointer shrink-0">
+                                <input type="checkbox" class="peer sr-only" ${isChecked} onchange="updateToggle('${mod.name}', this.checked)">
+                                <div class="w-[18px] h-[18px] border border-textLow dark:border-d-textLow bg-transparent transition-all peer-checked:border-accent dark:peer-checked:border-d-accent peer-checked:bg-accent dark:peer-checked:bg-d-accent flex items-center justify-center">
+                                    <i class="bi bi-check text-bg dark:text-d-bg text-[16px] opacity-0 peer-checked:opacity-100 font-bold -mt-[1px]"></i>
+                                </div>
+                            </label>
+                        </div>
+                    `;
+                });
+                attachDragEvents();
+            } catch (e) { console.error("Failed to load toggles", e); }
+        }
+
+        window.showReadme = function(mod) { if (window.ahk) ahk.ShowReadme(mod); };
+        window.hideReadme = function() { if (window.ahk) ahk.HideReadme(); };
+        window.updateToggle = function(name, value) { if (window.ahk) ahk.UpdateToggle(name, value ? 1 : 0); };
+
+        let dragSrcEl = null;
+        function handleDragStart(e) { this.style.opacity = '0.4'; dragSrcEl = this; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/html', this.innerHTML); }
+        function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
+        function handleDragEnter(e) { this.classList.add('over'); }
+        function handleDragLeave(e) { this.classList.remove('over'); }
+        function handleDrop(e) { e.stopPropagation(); if (dragSrcEl !== this) { const list = document.getElementById('sortableList'); const rect = this.getBoundingClientRect(); const midpoint = rect.top + rect.height / 2; if (e.clientY >= midpoint) { this.parentNode.insertBefore(dragSrcEl, this.nextSibling); } else { this.parentNode.insertBefore(dragSrcEl, this); } } return false; }
+        function handleDragEnd(e) { this.style.opacity = '1'; saveModuleOrder(); }
+        
+        function saveModuleOrder() {
+            const moduleItems = document.querySelectorAll('#sortableList .script-item');
+            const moduleOrder = Array.from(moduleItems).map(item => item.dataset.moduleName);
+            if (window.ahk) ahk.UpdateModuleOrder(JSON.stringify(moduleOrder));
+        }
+
+        function attachDragEvents() {
+            let items = document.querySelectorAll('.script-item');
+            items.forEach(function(item) {
+                item.setAttribute('draggable', 'true');
+                item.addEventListener('dragstart', handleDragStart, false);
+                item.addEventListener('dragenter', handleDragEnter, false);
+                item.addEventListener('dragleave', handleDragLeave, false);
+                item.addEventListener('dragover', handleDragOver, false);
+                item.addEventListener('drop', handleDrop, false);
+                item.addEventListener('dragend', handleDragEnd, false);
+            });
+        }
+        window.addEventListener('DOMContentLoaded', () => { initCheckboxes(); });
+    </script>
+</body>
+</html>
